@@ -14,4 +14,10 @@ export let initWebRoutes = (app) => {
 
     app.route('/room/create')
     .post(roomCtrl.createRoom);
+
+    app.route('/room/join')
+    .post(roomCtrl.joinRoom);
+
+    app.route('/room/leave')
+    .post(roomCtrl.leaveRoom);
 }
