@@ -17,7 +17,7 @@ const updateBalance = async (uid, action, amount) => {
     let balanceData = await Firestore.collection("storage")
         .doc(uid)
         .get();
-    if (!balanceData.exists) {
+    if (!balanceData.exists || amount < 0) {
         return null;
     }
     let currentBalance = balanceData.data().balance;
