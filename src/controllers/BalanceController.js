@@ -39,17 +39,16 @@ export let updateUserBalance = async (req, res) => {
     let action = req.body.data.action;
     let newBalance = await updateBalance(uid, action, amount)
     if (uid == null || uid == "") {
-        res.json({"data": null, "msg": "err User not vaild"});
+        return res.json({"data": null, "msg": "err User not vaild"});
     }
     if (newBalance === null) {
-        res.json({"data": null, "msg": "err Invalid transaction"});
-        return;
+        return res.json({"data": null, "msg": "err Invalid transaction"});
     }
 
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
-            return res.json({"currentBalance": newBalance, "msg": "ok"})
+            return res.json({"data": newBalance, "msg": "ok"})
         })
         .catch((error) => {
             return res.json({"data": null, "msg": "err "+error});

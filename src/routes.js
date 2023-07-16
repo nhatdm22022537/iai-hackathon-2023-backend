@@ -21,6 +21,9 @@ export let initWebRoutes = (app) => {
     app.route('/room/leave')
     .post(roomCtrl.leaveRoom);
 
+    app.route('/room/list')
+    .get(roomCtrl.listUserRoom);
+
     app.route('/storage/get')
         .get(balanceCtrl.getUserPossession);
 

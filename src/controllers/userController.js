@@ -3,16 +3,14 @@ import { globalCache } from "../server";
 
 export let internalGetUserInfo = async (uid) => {
     let cached = globalCache.get("users/" + uid);
-    if(cached) {
-        return cached;
-    }
+    if(cached) return cached;
     else {
         let doc = await Firestore.collection("user_data").doc(uid).get();
         if(doc.exists) {
             globalCache.set("users/" + uid, doc.data());
             return doc.data();
         }
-        else return null;
+        return null;
     }
 }
 
@@ -22,7 +20,7 @@ export let getUserInfo = async (req, res) => {
     let resUID = req.body.data;
     let data = await internalGetUserInfo(resUID);
     if(data) return res.json({ "msg": "ok", "data": data});
-    else return res.json({"msg": "err ", "data": null});
+    else return res.json({"msg": "err No data", "data": null});
 };
 
 export let setUserInfo = (req, res) => {
