@@ -27,6 +27,9 @@ export let initWebRoutes = (app) => {
     app.route('/storage/get')
         .get(balanceCtrl.getUserPossession);
 
+    app.route('/storage/set')
+        .post(balanceCtrl.setUserPossession);
+
     app.route('/storage/update')
         .put(balanceCtrl.updateUserBalance)
 }
