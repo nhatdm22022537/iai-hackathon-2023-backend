@@ -1,7 +1,7 @@
 let homeCtrl = require('./controllers/homeController');
 let userCtrl = require('./controllers/userController');
 let roomCtrl = require('./controllers/roomController');
-
+let balanceCtrl = require('./controllers/BalanceController')
 export let initWebRoutes = (app) => {
     app.route('/')
     .get(homeCtrl.getHomePage);
@@ -20,4 +20,10 @@ export let initWebRoutes = (app) => {
 
     app.route('/room/leave')
     .post(roomCtrl.leaveRoom);
+
+    app.route('/storage/get')
+        .get(balanceCtrl.getUserPossession);
+
+    app.route('/storage/update')
+        .put(balanceCtrl.updateUserBalance)
 }
