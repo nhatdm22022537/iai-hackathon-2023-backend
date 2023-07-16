@@ -2,25 +2,42 @@ import {Firestore} from "../config/firebaseInit";
 
 export let getUserPossession = (req, res) => {
     let uid = req.body.uid;
-    if(uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
+    if (uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
     Firestore.collection("storage").doc(uid)
         .get()
         .then((doc) => {
-            return res.json({"data": doc.data(), "msg": (doc.exists ? "ok": "err User not found")});
+            return res.json({"data": doc.data(), "msg": (doc.exists ? "ok" : "err User not found")});
         })
         .catch((error) => {
-            return res.json({"data": null, "msg": "err "+error});
+            return res.json({"data": null, "msg": "err " + error});
         });
 };
+export let setUserPossession = async (req, res) => {
+    let uid = req.body.uid;
+    if (uid == null || uid == "") {
+        res.json({"data": null, "msg": "err User not vaild"});
+    }
+    const balance = req.body.data.balance;
+    const items = req.body.data.items;
+    Firestore.collection("storage").doc(uid)
+        .set({balance: balance, items: items})
+        .then(() => {
+            res.json({"data": {'balance': balance, 'items': items}, "msg": "hihi"});
+        })
+        .catch((error) => {
+            return res.json({"data": null, "msg": "err " + error});
+        });
+}
 
 const updateBalance = async (uid, action, amount) => {
     let balanceData = await Firestore.collection("storage")
         .doc(uid)
         .get();
+
+    let currentBalance = balanceData.data().balance;
     if (!balanceData.exists || amount < 0) {
         return null;
     }
-    let currentBalance = balanceData.data().balance;
     if (action === 'set') {
         return amount;
     } else if (action === 'deposit') {
@@ -52,6 +69,6 @@ export let updateUserBalance = async (req, res) => {
             return res.json({"currentBalance": newBalance, "msg": "ok"})
         })
         .catch((error) => {
-            return res.json({"data": null, "msg": "err "+error});
+            return res.json({"data": null, "msg": "err " + error});
         });
 }
