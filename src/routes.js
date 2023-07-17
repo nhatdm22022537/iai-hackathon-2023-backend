@@ -15,6 +15,12 @@ export let initWebRoutes = (app) => {
     app.route('/room/create')
     .post(roomCtrl.createRoom);
 
+    app.route('/room/update')
+    .post(roomCtrl.updateRoom);
+
+    app.route('/room/delete')
+    .post(roomCtrl.deleteRoom);
+
     app.route('/room/join')
     .post(roomCtrl.joinRoom);
 
@@ -22,7 +28,10 @@ export let initWebRoutes = (app) => {
     .post(roomCtrl.leaveRoom);
 
     app.route('/room/list')
-    .get(roomCtrl.listUserRoom);
+    .get(roomCtrl.getRoomUserList);
+
+    app.route('/room/get')
+    .get(roomCtrl.getRoomInfo);
 
     app.route('/storage/get')
         .get(balanceCtrl.getUserPossession);
