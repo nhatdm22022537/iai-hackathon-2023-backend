@@ -1,7 +1,11 @@
+import {addShopItem, Item, removeShopItem} from "./shop";
+import {addItem, addItemToUser} from "./controllers/PossessionController";
+
 let homeCtrl = require('./controllers/homeController');
 let userCtrl = require('./controllers/userController');
 let roomCtrl = require('./controllers/roomController');
-let balanceCtrl = require('./controllers/BalanceController')
+let possessionCtrl = require('./controllers/PossessionController')
+let shop = require('./shop.js')
 export let initWebRoutes = (app) => {
     app.route('/')
     .get(homeCtrl.getHomePage);
@@ -22,11 +26,15 @@ export let initWebRoutes = (app) => {
     .post(roomCtrl.leaveRoom);
 
     app.route('/storage/get')
-        .get(balanceCtrl.getUserPossession);
-
-    app.route('/storage/set')
-        .post(balanceCtrl.setUserPossession);
+        .get(possessionCtrl.getUserPossession);
 
     app.route('/storage/update')
-        .put(balanceCtrl.updateUserBalance)
+        .put(possessionCtrl.updateUserBalance);
+
+    app.route('/shop')
+        .get(shop.getShop)
+
+    app.route('/shop')
+        .post(shop.buyItem);
+
 }
