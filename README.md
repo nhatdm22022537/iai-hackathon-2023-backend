@@ -2,9 +2,17 @@
 20mil will be in our hands.
 
 ## Getting started
-- Clone this repo.
-- Config the `.env` file based on the `.env.example` file (optional).
-- Use your own Firebase Service Account if you want to use your own Firebase database, or to connect to the main database, use the file that was secretly given.
+- Clone this repo. Set the active directory to the newly generated folder.
+- Install `npm` and then install required libraries:
+```
+npm install
+```
+- Copy and change `.env` file based on the `.env.example` file (optional).
+- In the `config` folder, a JSON file that contains a Firebase Service Account (`firebaseAdminPK.json`) is needed. Use your self-generated file if you want to use your own Firebase database, or to use the official database, use the file that was secretly given.
+- Run the server with:
+```
+npm start
+```
 
 ## Usage
 ### General
@@ -94,8 +102,71 @@ Response:
 }
 ```
 
+- `/room/update` (POST): Update the data of the desired room. Only change if the user sending it is the owner. Require data contains room's id (everything else is optional).
+
+Request:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "desc": "save me",
+        "name": "cute name",
+        "rid": "4naDWJ"
+    }
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": null,
+}
+```
+
+- `/room/delete` (POST): Delete the desired room. Only delete if the user sending it is the owner. Require room's id.
+
+Request:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": "4naDWJ"
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": null,
+}
+```
+- `/room/get` (GET): Get the data of the desired room. Require room's id.
+
+Request:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": "5MAtq9"
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        "owner": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+        "name": "t1 is the winner",
+        "rid": "5MAtq9",
+        "desc": "kill me"
+    }
+}
+```
+
 - `/room/join` (POST): Join the desired room. Require the room's id.
 When execute, all users joined in the room will be notified (using WS).
+
 Request:
 ```
 {
@@ -121,6 +192,7 @@ WS emit:
 
 - `/room/leave` (POST): Leave the desired room. Require the room's id.
 When execute, all users joined in the room will be notified (using WS).
+
 Request:
 ```
 {

@@ -1,79 +1,207 @@
-import { Firestore, Database } from "../config/firebaseInit";
-import { b56gen } from "../utils";
-import { sendMessage } from "../server";
-import { internalGetUserInfo } from "./userController";
+import {Firestore, Database} from "../config/firebaseInit";
+import {b56gen} from "../utils";
+import {sendMessage, globalCache} from "../server";
+import {internalGetUserInfo} from "./userController";
+require("dotenv").config();
 
-export let createRoom = async(req, res) => {
-    let uid = req.body.uid;
-    let data = req.body.data;
-    if(uid == null || uid == "" || data == null || data.name == null || data.name == "" || data.desc == null || data.desc == "") {
+const internalUpdateCacheListRoom = async (rid) => {
+    let arr = globalCache.get("listUserRoom/"+rid);
+    if (arr) return arr;
+    return new Promise((resolve) => {
+        arr = [];
+        Database.ref("rooms_data/"+rid+"/userPart").once("value", async (data) => {
+            if (!data.hasChildren()) resolve(null);
+            else {
+                for (const [key, value] of Object.entries(data.val())) {
+                    await internalGetUserInfo(key).then((data) => {
+                        if (data) {
+                            arr.push({
+                                uid: key,
+                                user: data,
+                                data: value,
+                            });
+                        } else {
+                            resolve(null);
+                        }
+                    });
+                }
+                globalCache.set("listUserRoom/"+rid, arr);
+                resolve(arr);
+            }
+        }, (error) => {
+            console.log("Error when updating cache for room ", rid);
+        });
+    });
+};
+
+const internalGetRoomInfo = async (rid) => {
+    const data = globalCache.get("RoomsInfo/"+ rid);
+    if (data) return data;
+    const doc = await Firestore.collection("rooms").doc(rid).get();
+    if (!doc.exists) return null;
+    else {
+        globalCache.set("RoomsInfo/"+ rid, doc.data());
+        return doc.data();
+    }
+};
+
+export const createRoom = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == null || uid == "" || data == null) {
         return res.json({"msg": "err Data not vaild", "data": null});
     }
     let ok = false;
-    let rid = b56gen(process.env.ROOM_ID_LENGTH || 6);
-    while(!ok) {
-        let tmpDoc = await Firestore.collection("rooms").doc(rid).get();
-        if(!tmpDoc.exists) ok = true;
+    const rid = b56gen(process.env.ROOM_ID_LENGTH || 6);
+    while (!ok) {
+        const tmpDoc = await Firestore.collection("rooms").doc(rid).get();
+        if (!tmpDoc.exists) ok = true;
     }
     Firestore.collection("rooms").doc(rid).set({
-        "rid": rid,
-        "owner": uid,
-        "name": data.name || null,
-        "desc": data.desc || null,
+        "rid": rid, // Room's id (string)
+        "owner": uid, // Owner of the room (creator) (string)
+        "name": data.name || "", // Name of the room (string)
+        "desc": data.desc || "", // Description of the room (string)
+        "diff": data.diff || 0, // Difficulty of the game (integer)
+        "testId": data.testId || "", // Id of the test saved locally (string)
+        "qNum": data.qNum || "", // Number of question (integer)
     })
-    .then(() => {
-        
-    })
-    .catch((error) => {
-        return res.json({"msg": "err "+error, "data": null});
-    });
-    Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
-        "mode": 9
-    }, (error) => {
-        if(error) {
+        .then(() => {
+
+        })
+        .catch((error) => {
             return res.json({"msg": "err "+error, "data": null});
-        }
-        else {
+        });
+    Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
+        "mode": 9,
+    }, (error) => {
+        if (error) {
+            return res.json({"msg": "err "+error, "data": null});
+        } else {
+            internalUpdateCacheListRoom(rid);
             return res.json({"msg": "ok", "data": rid});
         }
     });
 };
 
-export let joinRoom = (req, res) => {
-    let uid = req.body.uid;
-    let rid = req.body.data;
-    if(uid == null || uid == "" || rid == null) {
+export const getRoomInfo = async (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.data;
+    if (uid == null || uid == "" || rid == null) {
         return res.json({"msg": "err Data not vaild", "data": null});
     }
-    Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
-        "mode": 1
-    }, async (error) => {
-        if(error) {
-            return res.json({"msg": "err "+error, "data": null});
-        }
-        else {
-            sendMessage(rid, "join", await internalGetUserInfo(uid));
-            // sendMessage(null, "join", await internalGetUserInfo(uid)); // testing globally, will change soon(tm)
-            return res.json({"msg": "ok", "data": null});
-        }
-    });
-}
+    const doc = await internalGetRoomInfo(rid);
+    if (doc) return res.json({"msg": "ok", "data": doc});
+    else return res.json({"msg": "err Invalid room", "data": null});
+};
 
-export let leaveRoom = (req, res) => {
-    let uid = req.body.uid;
-    let rid = req.body.data;
-    if(uid == null || uid == "" || rid == null) {
+export const updateRoom = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == null || uid == "" || data == null || data.rid == null) {
         return res.json({"msg": "err Data not vaild", "data": null});
     }
-    Database.ref("rooms_data/"+rid+"/userPart").child(uid).remove((error) => {
-        if(error) {
-            return res.json({"msg": "err "+error, "data": null});
-        }
-        else {
-            sendMessage(rid, "leave", uid);
-            // sendMessage(null, "leave", uid); // testing globally, will change soon(tm)
+    const doc = await internalGetRoomInfo(data.rid);
+    if (doc == null) return res.json({"msg": "err Room not found", "data": null});
+    if (uid != doc.owner) return res.json({"msg": "err No permission to change", "data": null});
+    const rid = doc.rid;
+    Firestore.collection("rooms").doc(rid).update(data)
+        .then(() => {
+            globalCache.del("RoomsInfo/"+rid);
+            internalGetRoomInfo(rid);
             return res.json({"msg": "ok", "data": null});
-        }
+        })
+        .catch((error) => {
+            return res.json({"msg": "err "+error, "data": null});
+        });
+};
+
+export const deleteRoom = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == null || uid == "" || data == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    const doc = await internalGetRoomInfo(data);
+    if (doc == null) return res.json({"msg": "err Room not found", "data": null});
+    if (uid != doc.owner) return res.json({"msg": "err No permission to change", "data": null});
+    Firestore.collection("rooms").doc(data).delete()
+        .then(() => {
+            Database.ref("rooms_data").child(data).remove((error) => {
+                if (error) return res.json({"msg": "err "+error, "data": null});
+                globalCache.del("RoomsInfo/"+data);
+                return res.json({"msg": "ok", "data": null});
+            });
+        })
+        .catch((error) => {
+            return res.json({"msg": "err "+error, "data": null});
+        });
+};
+
+export const getRoomUserList = (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.data;
+    if (uid == null || uid == "" || rid == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    internalUpdateCacheListRoom(rid).then((arr) => {
+        if (arr) return res.json({"msg": "ok", "data": arr});
+        else return res.json({"msg": "err Data not valid", "data": null});
     });
-}
+};
+
+export const joinRoom = (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.data;
+    if (uid == null || uid == "" || rid == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    const initVal = {
+        "mode": 1,
+    };
+    internalUpdateCacheListRoom(rid).then(async (arr) => {
+        if (arr == null) return res.json({"msg": "err Invalid room", "data": null});
+        const idx = arr.map((e) => e.uid).indexOf(uid);
+        if (idx > -1) return res.json({"msg": "err User joined before", "data": null});
+        const newUser = await internalGetUserInfo(uid);
+        if (newUser == null) return res.json({"msg": "err User not valid", "data": null});
+        Database.ref("rooms_data/"+rid+"/userPart").child(uid).set(initVal, async (error) => {
+            if (error) {
+                return res.json({"msg": "err "+error, "data": null});
+            } else {
+                sendMessage(rid, "join", newUser);
+                arr.push({
+                    uid: uid,
+                    user: newUser,
+                    data: initVal,
+                });
+                globalCache.set("listUserRoom/"+rid, arr);
+                return res.json({"msg": "ok", "data": null});
+            }
+        });
+    });
+};
+
+export const leaveRoom = (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.data;
+    if (uid == null || uid == "" || rid == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    internalUpdateCacheListRoom(rid).then((arr) => {
+        if (arr == null) return res.json({"msg": "err Invalid room", "data": null});
+        const idx = arr.map((e) => e.uid).indexOf(uid);
+        if (idx < 0) return res.json({"msg": "err User left before", "data": null});
+        Database.ref("rooms_data/"+rid+"/userPart").child(uid).remove((error) => {
+            if (error) {
+                return res.json({"msg": "err "+error, "data": null});
+            } else {
+                sendMessage(rid, "leave", uid);
+                arr.splice(idx, 1);
+                globalCache.set("listUserRoom/"+rid, arr);
+                return res.json({"msg": "ok", "data": null});
+            }
+        });
+    });
+};
 
