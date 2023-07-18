@@ -16,13 +16,13 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 initWebRoutes(app);
 
-const port = process.env.BACKEND_PORT || 8080;
+const port = process.env.BACKEND_PORT || 5678;
 
 app.listen(port, () => {
     console.log("I'm a cute backend and as the brain of this project I'm happy to serve everyone' request at port " + port);
 });
 
-const ws_port = process.env.BACKEND_WS_PORT || 3000;
+const ws_port = process.env.BACKEND_WS_PORT || 3456;
 export const io = new Server(ws_port, {
     cors: {
         origin: ["http://localhost:"+port, "http://localhost:"+ws_port, "https://admin.socket.io/"],
@@ -44,7 +44,7 @@ instrument(io, {
 });
 
 export const sendMessage = (roomId, key, message) => {
-    if (roomId) {
+    if (roomId && process.env.BACKEND_WS_GLOBAL_EMIT === "False") {
         io.to(roomId).emit(key, message);
         console.info(`WS sent to: ${roomId}/${key}: ${message}`);
     } else {

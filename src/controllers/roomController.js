@@ -4,33 +4,45 @@ import {sendMessage, globalCache} from "../server";
 import {internalGetUserInfo} from "./userController";
 require("dotenv").config();
 
-export const internalUpdateCacheListRoom = async (rid) => {
+const internalUpdateCacheListRoom = async (rid) => {
     let arr = globalCache.get("listUserRoom/"+rid);
     if (arr) return arr;
     return new Promise((resolve) => {
         arr = [];
         Database.ref("rooms_data/"+rid+"/userPart").once("value", async (data) => {
-            let hasData = false;
-            for (const [key, value] of Object.entries(data.val())) {
-                hasData = true;
-                await internalGetUserInfo(key).then((data) => {
-                    arr.push({
-                        uid: key,
-                        user: data,
-                        data: value,
+            if (!data.hasChildren()) resolve(null);
+            else {
+                for (const [key, value] of Object.entries(data.val())) {
+                    await internalGetUserInfo(key).then((data) => {
+                        if (data) {
+                            arr.push({
+                                uid: key,
+                                user: data,
+                                data: value,
+                            });
+                        } else {
+                            resolve(null);
+                        }
                     });
-                });
-            }
-            if (hasData) {
+                }
                 globalCache.set("listUserRoom/"+rid, arr);
                 resolve(arr);
-            } else {
-                resolve(null);
             }
         }, (error) => {
             console.log("Error when updating cache for room ", rid);
         });
     });
+};
+
+const internalGetRoomInfo = async (rid) => {
+    const data = globalCache.get("RoomsInfo/"+ rid);
+    if (data) return data;
+    const doc = await Firestore.collection("rooms").doc(rid).get();
+    if (!doc.exists) return null;
+    else {
+        globalCache.set("RoomsInfo/"+ rid, doc.data());
+        return doc.data();
+    }
 };
 
 export const createRoom = async (req, res) => {
@@ -45,15 +57,14 @@ export const createRoom = async (req, res) => {
         const tmpDoc = await Firestore.collection("rooms").doc(rid).get();
         if (!tmpDoc.exists) ok = true;
     }
-    // todo: another mode if request has docx attached to it
     Firestore.collection("rooms").doc(rid).set({
-        "rid": rid,
-        "owner": uid,
-        "name": data.name || "",
-        "desc": data.desc || "",
-        // "testId" // Id of the test saved locally (string)
-        // "qNum" // Number of question (integer)
-        // "diff" // Difficulty of the game (integer)
+        "rid": rid, // Room's id (string)
+        "owner": uid, // Owner of the room (creator) (string)
+        "name": data.name || "", // Name of the room (string)
+        "desc": data.desc || "", // Description of the room (string)
+        "diff": data.diff || 0, // Difficulty of the game (integer)
+        "testId": data.testId || "", // Id of the test saved locally (string)
+        "qNum": data.qNum || "", // Number of question (integer)
     })
         .then(() => {
 
@@ -73,17 +84,31 @@ export const createRoom = async (req, res) => {
     });
 };
 
-export const updateRoom = (req, res) => {
+export const getRoomInfo = async (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.data;
+    if (uid == null || uid == "" || rid == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    const doc = await internalGetRoomInfo(rid);
+    if (doc) return res.json({"msg": "ok", "data": doc});
+    else return res.json({"msg": "err Invalid room", "data": null});
+};
+
+export const updateRoom = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == null || uid == "" || data == null || data.rid == null) {
         return res.json({"msg": "err Data not vaild", "data": null});
     }
-    // todo: check server-side.
-    if (uid != data.owner) return res.json({"msg": "err No permission to change", "data": null});
-    const rid = data.rid;
+    const doc = await internalGetRoomInfo(data.rid);
+    if (doc == null) return res.json({"msg": "err Room not found", "data": null});
+    if (uid != doc.owner) return res.json({"msg": "err No permission to change", "data": null});
+    const rid = doc.rid;
     Firestore.collection("rooms").doc(rid).update(data)
         .then(() => {
+            globalCache.del("RoomsInfo/"+rid);
+            internalGetRoomInfo(rid);
             return res.json({"msg": "ok", "data": null});
         })
         .catch((error) => {
@@ -91,24 +116,38 @@ export const updateRoom = (req, res) => {
         });
 };
 
-export const deleteRoom = (req, res) => {
+export const deleteRoom = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == null || uid == "" || data == null) {
         return res.json({"msg": "err Data not vaild", "data": null});
     }
-    // todo: check server-side.
-    // if(uid != data) return res.json({"msg": "err No permission to change", "data": null});
+    const doc = await internalGetRoomInfo(data);
+    if (doc == null) return res.json({"msg": "err Room not found", "data": null});
+    if (uid != doc.owner) return res.json({"msg": "err No permission to change", "data": null});
     Firestore.collection("rooms").doc(data).delete()
         .then(() => {
             Database.ref("rooms_data").child(data).remove((error) => {
                 if (error) return res.json({"msg": "err "+error, "data": null});
+                globalCache.del("RoomsInfo/"+data);
                 return res.json({"msg": "ok", "data": null});
             });
         })
         .catch((error) => {
             return res.json({"msg": "err "+error, "data": null});
         });
+};
+
+export const getRoomUserList = (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.data;
+    if (uid == null || uid == "" || rid == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    internalUpdateCacheListRoom(rid).then((arr) => {
+        if (arr) return res.json({"msg": "ok", "data": arr});
+        else return res.json({"msg": "err Data not valid", "data": null});
+    });
 };
 
 export const joinRoom = (req, res) => {
@@ -120,26 +159,24 @@ export const joinRoom = (req, res) => {
     const initVal = {
         "mode": 1,
     };
-    internalUpdateCacheListRoom(rid).then((arr) => {
+    internalUpdateCacheListRoom(rid).then(async (arr) => {
         if (arr == null) return res.json({"msg": "err Invalid room", "data": null});
+        const idx = arr.map((e) => e.uid).indexOf(uid);
+        if (idx > -1) return res.json({"msg": "err User joined before", "data": null});
+        const newUser = await internalGetUserInfo(uid);
+        if (newUser == null) return res.json({"msg": "err User not valid", "data": null});
         Database.ref("rooms_data/"+rid+"/userPart").child(uid).set(initVal, async (error) => {
             if (error) {
                 return res.json({"msg": "err "+error, "data": null});
             } else {
-                const idx = arr.map((e) => e.uid).indexOf(uid);
-                if (idx > -1) {
-                    return res.json({"msg": "err User joined before", "data": null});
-                } else {
-                    const newUser = await internalGetUserInfo(uid);
-                    sendMessage(rid, "join", newUser);
-                    arr.push({
-                        uid: uid,
-                        user: newUser,
-                        data: initVal,
-                    });
-                    globalCache.set("listUserRoom/"+rid, arr);
-                    return res.json({"msg": "ok", "data": null});
-                }
+                sendMessage(rid, "join", newUser);
+                arr.push({
+                    uid: uid,
+                    user: newUser,
+                    data: initVal,
+                });
+                globalCache.set("listUserRoom/"+rid, arr);
+                return res.json({"msg": "ok", "data": null});
             }
         });
     });
@@ -153,42 +190,18 @@ export const leaveRoom = (req, res) => {
     }
     internalUpdateCacheListRoom(rid).then((arr) => {
         if (arr == null) return res.json({"msg": "err Invalid room", "data": null});
+        const idx = arr.map((e) => e.uid).indexOf(uid);
+        if (idx < 0) return res.json({"msg": "err User left before", "data": null});
         Database.ref("rooms_data/"+rid+"/userPart").child(uid).remove((error) => {
             if (error) {
                 return res.json({"msg": "err "+error, "data": null});
             } else {
-                const idx = arr.map((e) => e.uid).indexOf(uid);
-                if (idx > -1) {
-                    sendMessage(rid, "leave", uid);
-                    arr.splice(idx, 1);
-                    globalCache.set("listUserRoom/"+rid, arr);
-                    return res.json({"msg": "ok", "data": null});
-                } else {
-                    return res.json({"msg": "err User left before", "data": null});
-                }
+                sendMessage(rid, "leave", uid);
+                arr.splice(idx, 1);
+                globalCache.set("listUserRoom/"+rid, arr);
+                return res.json({"msg": "ok", "data": null});
             }
         });
     });
 };
 
-export const getRoomUserList = (req, res) => {
-    const uid = req.body.uid;
-    const rid = req.body.data;
-    if (uid == null || uid == "" || rid == null) {
-        return res.json({"msg": "err Data not vaild", "data": null});
-    }
-    internalUpdateCacheListRoom(rid).then((arr) => {
-        return res.json({"msg": "ok", "data": arr});
-    });
-};
-
-export const getRoomInfo = async (req, res) => {
-    const uid = req.body.uid;
-    const rid = req.body.data;
-    if (uid == null || uid == "" || rid == null) {
-        return res.json({"msg": "err Data not vaild", "data": null});
-    }
-    const doc = await Firestore.collection("rooms").doc(rid).get();
-    if (!doc.exists) return res.json({"msg": "err Invalid room", "data": null});
-    else return res.json({"msg": "ok", "data": doc.data()});
-};
