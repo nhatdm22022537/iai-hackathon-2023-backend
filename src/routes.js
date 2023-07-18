@@ -1,44 +1,45 @@
-let homeCtrl = require('./controllers/homeController');
-let userCtrl = require('./controllers/userController');
-let roomCtrl = require('./controllers/roomController');
-let balanceCtrl = require('./controllers/BalanceController')
-export let initWebRoutes = (app) => {
-    app.route('/')
-    .get(homeCtrl.getHomePage);
+const homeCtrl = require("./controllers/homeController");
+const userCtrl = require("./controllers/userController");
+const roomCtrl = require("./controllers/roomController");
+const balanceCtrl = require("./controllers/BalanceController");
 
-    app.route('/user/get')
-    .get(userCtrl.getUserInfo);
-    
-    app.route('/user/update')
-    .post(userCtrl.setUserInfo);
+export const initWebRoutes = (app) => {
+    app.route("/")
+        .get(homeCtrl.getHomePage);
 
-    app.route('/room/create')
-    .post(roomCtrl.createRoom);
+    app.route("/user/get")
+        .get(userCtrl.getUserInfo);
 
-    app.route('/room/update')
-    .post(roomCtrl.updateRoom);
+    app.route("/user/update")
+        .post(userCtrl.setUserInfo);
 
-    app.route('/room/delete')
-    .post(roomCtrl.deleteRoom);
+    app.route("/room/create")
+        .post(roomCtrl.createRoom);
 
-    app.route('/room/join')
-    .post(roomCtrl.joinRoom);
+    app.route("/room/update")
+        .post(roomCtrl.updateRoom);
 
-    app.route('/room/leave')
-    .post(roomCtrl.leaveRoom);
+    app.route("/room/delete")
+        .post(roomCtrl.deleteRoom);
 
-    app.route('/room/list')
-    .get(roomCtrl.getRoomUserList);
+    app.route("/room/join")
+        .post(roomCtrl.joinRoom);
 
-    app.route('/room/get')
-    .get(roomCtrl.getRoomInfo);
+    app.route("/room/leave")
+        .post(roomCtrl.leaveRoom);
 
-    app.route('/storage/get')
+    app.route("/room/list")
+        .get(roomCtrl.getRoomUserList);
+
+    app.route("/room/get")
+        .get(roomCtrl.getRoomInfo);
+
+    app.route("/storage/get")
         .get(balanceCtrl.getUserPossession);
 
-    app.route('/storage/set')
+    app.route("/storage/set")
         .post(balanceCtrl.setUserPossession);
 
-    app.route('/storage/update')
-        .put(balanceCtrl.updateUserBalance)
-}
+    app.route("/storage/update")
+        .put(balanceCtrl.updateUserBalance);
+};

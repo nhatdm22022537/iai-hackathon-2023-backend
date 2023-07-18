@@ -1,7 +1,7 @@
 import {Firestore} from "../config/firebaseInit";
 
-export let getUserPossession = (req, res) => {
-    let uid = req.body.uid;
+export const getUserPossession = (req, res) => {
+    const uid = req.body.uid;
     if (uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
     Firestore.collection("storage").doc(uid)
         .get()
@@ -12,8 +12,8 @@ export let getUserPossession = (req, res) => {
             return res.json({"data": null, "msg": "err " + error});
         });
 };
-export let setUserPossession = async (req, res) => {
-    let uid = req.body.uid;
+export const setUserPossession = async (req, res) => {
+    const uid = req.body.uid;
     if (uid == null || uid == "") {
         res.json({"data": null, "msg": "err User not vaild"});
     }
@@ -22,39 +22,39 @@ export let setUserPossession = async (req, res) => {
     Firestore.collection("storage").doc(uid)
         .set({balance: balance, items: items})
         .then(() => {
-            res.json({"data": {'balance': balance, 'items': items}, "msg": "hihi"});
+            res.json({"data": {"balance": balance, "items": items}, "msg": "hihi"});
         })
         .catch((error) => {
             return res.json({"data": null, "msg": "err " + error});
         });
-}
+};
 
 const updateBalance = async (uid, action, amount) => {
-    let balanceData = await Firestore.collection("storage")
+    const balanceData = await Firestore.collection("storage")
         .doc(uid)
         .get();
 
-    let currentBalance = balanceData.data().balance;
+    const currentBalance = balanceData.data().balance;
     if (!balanceData.exists || amount < 0) {
         return null;
     }
-    if (action === 'set') {
+    if (action === "set") {
         return amount;
-    } else if (action === 'deposit') {
+    } else if (action === "deposit") {
         return currentBalance + amount;
-    } else if (action === 'withdraw') {
+    } else if (action === "withdraw") {
         if (currentBalance < amount) {
             return null;
         }
         return currentBalance - amount;
     }
-}
+};
 
-export let updateUserBalance = async (req, res) => {
-    let uid = req.body.uid;
-    let amount = req.body.data.amount;
-    let action = req.body.data.action;
-    let newBalance = await updateBalance(uid, action, amount)
+export const updateUserBalance = async (req, res) => {
+    const uid = req.body.uid;
+    const amount = req.body.data.amount;
+    const action = req.body.data.action;
+    const newBalance = await updateBalance(uid, action, amount);
     if (uid == null || uid == "") {
         return res.json({"data": null, "msg": "err User not vaild"});
     }
@@ -65,9 +65,9 @@ export let updateUserBalance = async (req, res) => {
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
-            return res.json({"data": newBalance, "msg": "ok"})
+            return res.json({"data": newBalance, "msg": "ok"});
         })
         .catch((error) => {
             return res.json({"data": null, "msg": "err " + error});
         });
-}
+};
