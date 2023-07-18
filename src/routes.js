@@ -1,5 +1,3 @@
-import {addShopItem, Item, removeShopItem} from "./shop";
-import {addItem, addItemToUser} from "./controllers/PossessionController";
 
 let homeCtrl = require('./controllers/homeController');
 let userCtrl = require('./controllers/userController');

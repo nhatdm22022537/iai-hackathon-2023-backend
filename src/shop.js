@@ -7,7 +7,7 @@
     - description: Item's description
 */
 import {Firestore} from "./config/firebaseInit";
-import {addItemToUser, internalUpdateUserBalance, updateUserBalance} from "./controllers/PossessionController";
+import {addItemToUser, internalUpdateUserBalance} from "./controllers/PossessionController";
 
 export class Item {
     constructor(name, type, cost, description) {
