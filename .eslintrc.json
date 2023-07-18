@@ -31,5 +31,6 @@
         "new-cap":"off",
         "max-len": "off",
         "require-jsdoc":"off"
-    }
+    },
+    "plugins": ["only-warn"]
 }

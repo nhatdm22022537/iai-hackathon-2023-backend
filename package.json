@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec babel-node src/server.js",
-    "lint": "eslint ./ --fix"
+    "lint": "eslint ./ --max-warnings=0 --fix"
   },
   "author": "Loli",
   "license": "ISC",
@@ -26,6 +26,7 @@
     "@babel/preset-env": "^7.12.10",
     "eslint": "^8.45.0",
     "eslint-config-google": "^0.14.0",
+    "eslint-plugin-only-warn": "^1.1.0",
     "nodemon": "^2.0.7"
   }
 }
