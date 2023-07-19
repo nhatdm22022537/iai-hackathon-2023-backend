@@ -1,26 +1,26 @@
 import {Firestore} from "../config/firebaseInit";
 
-let internalGetUserPossession = async (uid) => {
-    let doc = await Firestore.collection("storage")
+const internalGetUserPossession = async (uid) => {
+    const doc = await Firestore.collection("storage")
         .doc(uid).get();
     if (doc.exists) {
         return doc.data();
     } else {
         return null;
     }
-}
+};
 
-export let getUserPossession = async (req, res) => {
-    let uid = req.body.uid;
+export const getUserPossession = async (req, res) => {
+    const uid = req.body.uid;
     if (uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
-    let data = await internalGetUserPossession(uid);
+    const data = await internalGetUserPossession(uid);
     if (data) {
         return res.json({"data": data, "msg": "ok"});
     } else {
         return res.json({"data": null, "msg": "err"});
     }
 };
-export let setUserPossession = (uid, data) => {
+export const setUserPossession = (uid, data) => {
     if (uid == null || uid == "") {
         return;
     }
@@ -29,14 +29,14 @@ export let setUserPossession = (uid, data) => {
     Firestore.collection("storage").doc(uid)
         .set({balance: balance, items: items})
         .then(() => {
-            console.log('possession set')
+            console.log("possession set");
         })
         .catch((error) => {
-            console.log(error)
+            console.log(error);
         });
-}
+};
 
-export let addItemToUser = async (uid, data) => {
+export const addItemToUser = async (uid, data) => {
     if (uid == null || uid == "") {
         return;
     }
@@ -44,35 +44,35 @@ export let addItemToUser = async (uid, data) => {
     const currentPossession = await internalGetUserPossession(uid);
     const itemList = currentPossession.items;
     itemList[item] = true;
-    setUserPossession(uid, {balance:currentPossession.balance, items:itemList});
-}
+    setUserPossession(uid, {balance: currentPossession.balance, items: itemList});
+};
 
 const updateBalance = async (uid, action, amount) => {
-    let balanceData = await Firestore.collection("storage")
+    const balanceData = await Firestore.collection("storage")
         .doc(uid)
         .get();
 
-    let currentBalance = balanceData.data().balance;
+    const currentBalance = balanceData.data().balance;
     if (!balanceData.exists || amount < 0) {
         return null;
     }
-    if (action === 'set') {
+    if (action === "set") {
         return amount;
-    } else if (action === 'deposit') {
+    } else if (action === "deposit") {
         return currentBalance + amount;
-    } else if (action === 'withdraw') {
+    } else if (action === "withdraw") {
         if (currentBalance < amount) {
             return null;
         }
         return currentBalance - amount;
     }
-}
+};
 
-export let updateUserBalance = async (req, res) => {
-    let uid = req.body.uid;
-    let amount = req.body.data.amount;
-    let action = req.body.data.action;
-    let newBalance = await updateBalance(uid, action, amount)
+export const updateUserBalance = async (req, res) => {
+    const uid = req.body.uid;
+    const amount = req.body.data.amount;
+    const action = req.body.data.action;
+    const newBalance = await updateBalance(uid, action, amount);
     if (uid == null || uid == "") {
         return res.json({"data": null, "msg": "err User not vaild"});
     }
@@ -83,28 +83,28 @@ export let updateUserBalance = async (req, res) => {
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
-            return res.json({"currentBalance": newBalance, "msg": "ok"})
+            return res.json({"currentBalance": newBalance, "msg": "ok"});
         })
         .catch((error) => {
             return res.json({"data": null, "msg": "err " + error});
         });
-}
+};
 
-export let internalUpdateUserBalance = async (uid, amount, action) => {
-    let newBalance = await updateBalance(uid, action, amount)
+export const internalUpdateUserBalance = async (uid, amount, action) => {
+    const newBalance = await updateBalance(uid, action, amount);
     if (uid == null || uid == "") {
-        return ;
+        return;
     }
     if (newBalance === null) {
-        return ;
+        return;
     }
 
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
-            console.log('balance updated');
+            console.log("balance updated");
         })
         .catch((error) => {
             console.log(error);
         });
-}
+};
