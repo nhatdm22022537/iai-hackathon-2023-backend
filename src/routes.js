@@ -37,12 +37,12 @@ export const initWebRoutes = (app) => {
     app.route("/storage/get")
         .get(possessionCtrl.getUserPossession);
 
-    app.route('/storage/update')
+    app.route("/storage/update")
         .put(possessionCtrl.updateUserBalance);
 
-    app.route('/shop')
+    app.route("/shop")
         .get(shop.getShop)
 
-    app.route('/shop/buy')
+    app.route("/shop/buy")
         .post(shop.buyItem);
 };

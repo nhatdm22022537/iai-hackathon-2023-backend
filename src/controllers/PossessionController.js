@@ -1,7 +1,7 @@
 import {Firestore} from "../config/firebaseInit";
 
-let internalGetUserPossession = async (uid) => {
-    let doc = await Firestore.collection("storage")
+const internalGetUserPossession = async (uid) => {
+    const doc = await Firestore.collection("storage")
         .doc(uid).get();
     if (doc.exists) {
         return doc.data();
@@ -10,17 +10,17 @@ let internalGetUserPossession = async (uid) => {
     }
 }
 
-export let getUserPossession = async (req, res) => {
-    let uid = req.body.uid;
+export const getUserPossession = async (req, res) => {
+    const uid = req.body.uid;
     if (uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
-    let data = await internalGetUserPossession(uid);
+    const data = await internalGetUserPossession(uid);
     if (data) {
         return res.json({"data": data, "msg": "ok"});
     } else {
         return res.json({"data": null, "msg": "err"});
     }
 };
-export let setUserPossession = (uid, data) => {
+export const setUserPossession = (uid, data) => {
     if (uid == null || uid == "") {
         return;
     }
@@ -36,7 +36,7 @@ export let setUserPossession = (uid, data) => {
         });
 }
 
-export let addItemToUser = async (uid, data) => {
+export const addItemToUser = async (uid, data) => {
     if (uid == null || uid == "") {
         return;
     }
@@ -49,11 +49,11 @@ export let addItemToUser = async (uid, data) => {
 }
 
 const updateBalance = async (uid, action, amount) => {
-    let balanceData = await internalGetUserPossession(uid);
+    const balanceData = await internalGetUserPossession(uid);
     if (balanceData === null) {
         return null;
     }
-    let currentBalance = balanceData.balance;
+    const currentBalance = balanceData.balance;
     if (amount < 0) {
         return null;
     }
@@ -69,11 +69,11 @@ const updateBalance = async (uid, action, amount) => {
     }
 }
 
-export let updateUserBalance = async (req, res) => {
-    let uid = req.body.uid;
-    let amount = req.body.data.amount;
-    let action = req.body.data.action;
-    let newBalance = await updateBalance(uid, action, amount)
+export const updateUserBalance = async (req, res) => {
+    const uid = req.body.uid;
+    const amount = req.body.data.amount;
+    const action = req.body.data.action;
+    const newBalance = await updateBalance(uid, action, amount)
     if (uid == null || uid == "") {
         return res.json({"data": null, "msg": "err User not vaild"});
     }
@@ -91,8 +91,8 @@ export let updateUserBalance = async (req, res) => {
         });
 }
 
-export let internalUpdateUserBalance = async (uid, action, amount) => {
-    let newBalance = await updateBalance(uid, action, amount);
+export const internalUpdateUserBalance = async (uid, action, amount) => {
+    const newBalance = await updateBalance(uid, action, amount);
     if (uid == null || uid == "") {
         return ;
     }

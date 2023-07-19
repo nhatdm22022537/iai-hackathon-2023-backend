@@ -29,19 +29,19 @@ export class Item {
 }
 
 
-export let getShop = async (req, res) => {
-    let itemList = {}
-    let collection = (await Firestore.collection('shop')
+export const getShop = async (req, res) => {
+    const itemList = {}
+    const collection = (await Firestore.collection('shop')
         .get());
     collection.forEach((snapshot) => {
-        let doc = snapshot.data();
+        const doc = snapshot.data();
         itemList[doc.name] = doc;
     })
     return res.json(itemList)
 }
 
 // param 'item' is in JSON format. Can be passed with toJSON method.
-export let addShopItem = (id, item) => {
+export const addShopItem = (id, item) => {
     Firestore.collection('shop').doc(id).set(
         item
     ).then(() => {
@@ -49,7 +49,7 @@ export let addShopItem = (id, item) => {
     })
 }
 
-export let removeShopItem = (id) => {
+export const removeShopItem = (id) => {
     Firestore.collection('shop').doc(id)
         .delete()
         .then(() => {
@@ -57,26 +57,26 @@ export let removeShopItem = (id) => {
         })
 }
 
-export let buyItem = async (req, res) => {
-    let uid = req.body.uid;
-    let item = req.body.data.item;
-    let possession = await Firestore.collection("storage")
+export const buyItem = async (req, res) => {
+    const uid = req.body.uid;
+    const item = req.body.data.item;
+    const possession = await Firestore.collection("storage")
         .doc(uid)
         .get()
 
-    let currentPossession = possession.data();
+    const currentPossession = possession.data();
     if (currentPossession.items[item]) {
         return res.json({'data': 'lol', 'msg': 'you already have this item'});
     }
 
-    let itemData = (await Firestore.collection("shop")
+    const itemData = (await Firestore.collection("shop")
         .doc(item)
         .get())
         .data();
 
 
     if (currentPossession.balance > itemData.cost) {
-        let newItem = new Item(itemData.name, itemData.type, itemData.cost, itemData.description);
+        const newItem = new Item(itemData.name, itemData.type, itemData.cost, itemData.description);
         await addItemToUser(uid, {item: item, itemInfo: newItem.toJSON()})
         await internalUpdateUserBalance(uid,  "withdraw", itemData.cost);
         return res.json({'data': 'lol', 'msg': 'thank for purchasing'});
