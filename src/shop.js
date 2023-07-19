@@ -76,8 +76,9 @@ export let buyItem = async (req, res) => {
 
 
     if (currentPossession.balance > itemData.cost) {
-        await addItemToUser(uid, {item: item})
-        await internalUpdateUserBalance(uid, itemData.cost, "withdraw");
+        let newItem = new Item(itemData.name, itemData.type, itemData.cost, itemData.description);
+        await addItemToUser(uid, {item: item, itemInfo: newItem.toJSON()})
+        await internalUpdateUserBalance(uid,  "withdraw", itemData.cost);
         return res.json({'data': 'lol', 'msg': 'thank for purchasing'});
     } else {
         return res.json({'data': 'lol', 'msg': 'gtfo poor people'});

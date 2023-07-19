@@ -41,19 +41,20 @@ export let addItemToUser = async (uid, data) => {
         return;
     }
     const item = data.item;
+    const itemInfo = data.itemInfo;
     const currentPossession = await internalGetUserPossession(uid);
     const itemList = currentPossession.items;
-    itemList[item] = true;
+    itemList[item] = itemInfo;
     setUserPossession(uid, {balance:currentPossession.balance, items:itemList});
 }
 
 const updateBalance = async (uid, action, amount) => {
-    let balanceData = await Firestore.collection("storage")
-        .doc(uid)
-        .get();
-
-    let currentBalance = balanceData.data().balance;
-    if (!balanceData.exists || amount < 0) {
+    let balanceData = await internalGetUserPossession(uid);
+    if (balanceData === null) {
+        return null;
+    }
+    let currentBalance = balanceData.balance;
+    if (amount < 0) {
         return null;
     }
     if (action === 'set') {
@@ -90,15 +91,14 @@ export let updateUserBalance = async (req, res) => {
         });
 }
 
-export let internalUpdateUserBalance = async (uid, amount, action) => {
-    let newBalance = await updateBalance(uid, action, amount)
+export let internalUpdateUserBalance = async (uid, action, amount) => {
+    let newBalance = await updateBalance(uid, action, amount);
     if (uid == null || uid == "") {
         return ;
     }
     if (newBalance === null) {
         return ;
     }
-
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
