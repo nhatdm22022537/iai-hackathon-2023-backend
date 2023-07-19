@@ -1,6 +1,7 @@
 import {Firestore, Database} from "../config/firebaseInit";
 import {b56gen} from "../utils";
-import {sendMessage, globalCache} from "../server";
+import {globalCache} from "../server";
+import {sendMessage} from "../wsEventListener";
 import {internalGetUserInfo} from "./userController";
 require("dotenv").config();
 
@@ -25,6 +26,7 @@ const internalUpdateCacheListRoom = async (rid) => {
                         }
                     });
                 }
+                globalCache.set("numUserRoom/"+rid, arr.length);
                 globalCache.set("listUserRoom/"+rid, arr);
                 resolve(arr);
             }
@@ -34,7 +36,17 @@ const internalUpdateCacheListRoom = async (rid) => {
     });
 };
 
-const internalGetRoomInfo = async (rid) => {
+export const internalGetNumUser = async (rid) => {
+    const data = globalCache.get("numUserRoom/"+ rid);
+    if (data) return data;
+    return new Promise((resolve) => {
+        internalUpdateCacheListRoom(rid).then(() => {
+            resolve(globalCache.get("numUserRoom/"+ rid));
+        });
+    });
+};
+
+export const internalGetRoomInfo = async (rid) => {
     const data = globalCache.get("RoomsInfo/"+ rid);
     if (data) return data;
     const doc = await Firestore.collection("rooms").doc(rid).get();
@@ -130,6 +142,8 @@ export const deleteRoom = async (req, res) => {
             Database.ref("rooms_data").child(data).remove((error) => {
                 if (error) return res.json({"msg": "err "+error, "data": null});
                 globalCache.del("RoomsInfo/"+data);
+                globalCache.del("listUserRoom/"+data);
+                globalCache.del("numUserRoom/"+data);
                 return res.json({"msg": "ok", "data": null});
             });
         })
@@ -169,13 +183,14 @@ export const joinRoom = (req, res) => {
             if (error) {
                 return res.json({"msg": "err "+error, "data": null});
             } else {
-                sendMessage(rid, "join", newUser);
+                sendMessage(rid, "get-join", newUser);
                 arr.push({
                     uid: uid,
                     user: newUser,
                     data: initVal,
                 });
                 globalCache.set("listUserRoom/"+rid, arr);
+                globalCache.set("numUserRoom/"+rid, arr.length);
                 return res.json({"msg": "ok", "data": null});
             }
         });
@@ -196,9 +211,10 @@ export const leaveRoom = (req, res) => {
             if (error) {
                 return res.json({"msg": "err "+error, "data": null});
             } else {
-                sendMessage(rid, "leave", uid);
+                sendMessage(rid, "get-leave", uid);
                 arr.splice(idx, 1);
                 globalCache.set("listUserRoom/"+rid, arr);
+                globalCache.set("numUserRoom/"+rid, arr.length);
                 return res.json({"msg": "ok", "data": null});
             }
         });
