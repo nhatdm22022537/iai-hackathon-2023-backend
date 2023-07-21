@@ -23,50 +23,50 @@ export class Item {
             name: this.name,
             type: this.type,
             cost: this.cost,
-            description: this.description
-        }
+            description: this.description,
+        };
     }
 }
 
 
 export const getShop = async (req, res) => {
-    const itemList = {}
-    const collection = (await Firestore.collection('shop')
+    const itemList = {};
+    const collection = (await Firestore.collection("shop")
         .get());
     collection.forEach((snapshot) => {
         const doc = snapshot.data();
         itemList[doc.name] = doc;
-    })
-    return res.json(itemList)
-}
+    });
+    return res.json(itemList);
+};
 
 // param 'item' is in JSON format. Can be passed with toJSON method.
 export const addShopItem = (id, item) => {
-    Firestore.collection('shop').doc(id).set(
-        item
+    Firestore.collection("shop").doc(id).set(
+        item,
     ).then(() => {
-        console.log(item)
-    })
-}
+        console.log(item);
+    });
+};
 
 export const removeShopItem = (id) => {
-    Firestore.collection('shop').doc(id)
+    Firestore.collection("shop").doc(id)
         .delete()
         .then(() => {
-            console.log(`item with id=${id} gone`)
-        })
-}
+            console.log(`item with id=${id} gone`);
+        });
+};
 
 export const buyItem = async (req, res) => {
     const uid = req.body.uid;
     const item = req.body.data.item;
     const possession = await Firestore.collection("storage")
         .doc(uid)
-        .get()
+        .get();
 
     const currentPossession = possession.data();
     if (currentPossession.items[item]) {
-        return res.json({'data': 'lol', 'msg': 'you already have this item'});
+        return res.json({"data": "lol", "msg": "you already have this item"});
     }
 
     const itemData = (await Firestore.collection("shop")
@@ -77,13 +77,12 @@ export const buyItem = async (req, res) => {
 
     if (currentPossession.balance > itemData.cost) {
         const newItem = new Item(itemData.name, itemData.type, itemData.cost, itemData.description);
-        await addItemToUser(uid, {item: item, itemInfo: newItem.toJSON()})
-        await internalUpdateUserBalance(uid,  "withdraw", itemData.cost);
-        return res.json({'data': 'lol', 'msg': 'thank for purchasing'});
+        await addItemToUser(uid, {item: item, itemInfo: newItem.toJSON()});
+        await internalUpdateUserBalance(uid, "withdraw", itemData.cost);
+        return res.json({"data": "lol", "msg": "thank for purchasing"});
     } else {
-        return res.json({'data': 'lol', 'msg': 'gtfo poor people'});
+        return res.json({"data": "lol", "msg": "gtfo poor people"});
     }
-}
-
+};
 
 
