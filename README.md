@@ -33,9 +33,11 @@ npm start
 ```
 
 ### User module
-- `/user/get` (GET): Get details of an specific user. Return the data of that user.
+#### Route: `/user/get`
 
-Request:
+Request (GET): Get details of an specific user. Return the data of that user.
+- Requirement: Current user's uid
+- Body:
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -56,9 +58,12 @@ Response:
 }
 ```
 
-- `/user/update` (POST): Update details of the current user (not other user).
-
-Request:
+#### Route `/user/update`
+Request (POST): Update details of the current user (not other user).
+- Requirement:
+    - Current user's uid
+    - New data
+- Body:
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -80,10 +85,14 @@ Response:
 ```
 
 ### Room module
-- `/room/create` (POST): Create a new room, current user is the owner. Require the room's data. Return the newly created room's id (rid).
-The rid uses base56 character set (`23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz`).
+#### Route `/room/create`: 
 
-Request:
+Request (POST): Create a new room, current user is the owner.
+
+- Requirement: 
+    - Require the room's data. Return the newly created room's id (rid).
+    - The rid uses base56 character set (`23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz`).
+- Body:
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -102,9 +111,11 @@ Response:
 }
 ```
 
-- `/room/update` (POST): Update the data of the desired room. Only change if the user sending it is the owner. Require data contains room's id (everything else is optional).
+#### Route `/room/update` 
 
-Request:
+Request (POST): Update the data of the desired room. Only change if the user sending it is the owner. 
+- Requirement: Data contains room's id (everything else is optional).
+- Body:
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -124,9 +135,11 @@ Response:
 }
 ```
 
-- `/room/delete` (POST): Delete the desired room. Only delete if the user sending it is the owner. Require room's id.
+#### Route `/room/delete` 
 
-Request:
+Request (POST): Delete the desired room. Only delete if the user sending it is the owner. 
+- Requirement: Room's id.
+- Body
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -141,9 +154,11 @@ Response:
     "data": null,
 }
 ```
-- `/room/get` (GET): Get the data of the desired room. Require room's id.
+#### Route `/room/get` 
 
-Request:
+Request (GET): Get the data of the desired room. 
+- Requirement: Room's id.
+- Body
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -164,10 +179,12 @@ Response:
 }
 ```
 
-- `/room/join` (POST): Join the desired room. Require the room's id.
-When execute, all users joined in the room will be notified (using WS).
-
-Request:
+#### Route `/room/join` 
+Request (POST): Join the desired room. 
+- Requirement:
+    - Room's id.
+    - When execute, all users joined in the room will be notified (using WS).
+- Body:
 ```
 {
     "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
@@ -190,10 +207,13 @@ WS emit:
     data: <user details>
 ```
 
-- `/room/leave` (POST): Leave the desired room. Require the room's id.
-When execute, all users joined in the room will be notified (using WS).
+#### Route `/room/leave` 
 
-Request:
+Request (POST): Leave the desired room. 
+- Requirement:
+    - The room's id.
+    - When execute, all users joined in the room will be notified (using WS).
+- Body:
 ```
 {
     "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
@@ -216,9 +236,12 @@ WS emit:
     data: <uid>
 ```
 
-- `/shop` (GET): Get all the items the shop currently have.
-Request: (Bodyless?)
-
+### Shop module
+#### Route `/shop` 
+Request (GET): Get all the items the shop currently have.
+- Requirement: None.
+- Body: None.
+  
 Response:
 ```
 {
@@ -231,8 +254,12 @@ Response:
 }
 ```
 
-- `/shop/buy` (POST): Buy an item
-Request:
+#### Route `/shop/buy` 
+Request (POST): Buy an item
+- Requirement:
+  - user's uid
+  - item's name/id
+- Body:
 ```
 {
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",

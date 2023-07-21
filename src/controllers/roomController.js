@@ -5,43 +5,34 @@ import {sendMessage} from "../wsEventListener";
 import {internalGetUserInfo} from "./userController";
 require("dotenv").config();
 
-const internalUpdateCacheListRoom = async (rid) => {
+export const internalUpdateCacheListRoom = async (rid) => {
     let arr = globalCache.get("listUserRoom/"+rid);
     if (arr) return arr;
     return new Promise((resolve) => {
         arr = [];
         Database.ref("rooms_data/"+rid+"/userPart").once("value", async (data) => {
-            if (!data.hasChildren()) resolve(null);
-            else {
-                for (const [key, value] of Object.entries(data.val())) {
-                    await internalGetUserInfo(key).then((data) => {
-                        if (data) {
-                            arr.push({
-                                uid: key,
-                                user: data,
-                                data: value,
-                            });
-                        } else {
-                            resolve(null);
-                        }
-                    });
-                }
-                globalCache.set("numUserRoom/"+rid, arr.length);
-                globalCache.set("listUserRoom/"+rid, arr);
-                resolve(arr);
+            if (!data.hasChildren()) {
+                resolve(null);
+                return;
             }
+            for (const [key, value] of Object.entries(data.val())) {
+                await internalGetUserInfo(key).then((data) => {
+                    if (data) {
+                        arr.push({
+                            uid: key,
+                            user: data,
+                            data: value,
+                        });
+                    } else {
+                        resolve(null);
+                        return;
+                    }
+                });
+            }
+            globalCache.set("listUserRoom/"+rid, arr);
+            resolve(arr);
         }, (error) => {
             console.log("Error when updating cache for room ", rid);
-        });
-    });
-};
-
-export const internalGetNumUser = async (rid) => {
-    const data = globalCache.get("numUserRoom/"+ rid);
-    if (data) return data;
-    return new Promise((resolve) => {
-        internalUpdateCacheListRoom(rid).then(() => {
-            resolve(globalCache.get("numUserRoom/"+ rid));
         });
     });
 };
@@ -51,10 +42,8 @@ export const internalGetRoomInfo = async (rid) => {
     if (data) return data;
     const doc = await Firestore.collection("rooms").doc(rid).get();
     if (!doc.exists) return null;
-    else {
-        globalCache.set("RoomsInfo/"+ rid, doc.data());
-        return doc.data();
-    }
+    globalCache.set("RoomsInfo/"+ rid, doc.data());
+    return doc.data();
 };
 
 export const createRoom = async (req, res) => {
@@ -143,7 +132,6 @@ export const deleteRoom = async (req, res) => {
                 if (error) return res.json({"msg": "err "+error, "data": null});
                 globalCache.del("RoomsInfo/"+data);
                 globalCache.del("listUserRoom/"+data);
-                globalCache.del("numUserRoom/"+data);
                 return res.json({"msg": "ok", "data": null});
             });
         })
@@ -190,7 +178,6 @@ export const joinRoom = (req, res) => {
                     data: initVal,
                 });
                 globalCache.set("listUserRoom/"+rid, arr);
-                globalCache.set("numUserRoom/"+rid, arr.length);
                 return res.json({"msg": "ok", "data": null});
             }
         });
@@ -214,7 +201,6 @@ export const leaveRoom = (req, res) => {
                 sendMessage(rid, "get-leave", uid);
                 arr.splice(idx, 1);
                 globalCache.set("listUserRoom/"+rid, arr);
-                globalCache.set("numUserRoom/"+rid, arr.length);
                 return res.json({"msg": "ok", "data": null});
             }
         });

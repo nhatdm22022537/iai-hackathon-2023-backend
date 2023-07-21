@@ -1,4 +1,5 @@
 import {Server} from "socket.io";
+import {globalCache} from "./server";
 const {instrument} = require("@socket.io/admin-ui");
 const gameCtrl = require("./controllers/gameController");
 
@@ -14,28 +15,54 @@ export const io = new Server(ws_port, {
 console.log("I can satisfy everyone' need in real-time at port " + ws_port);
 
 io.on("connection", (socket) => {
+    let uid = "";
+    let rid = "";
+    let busy = false;
     console.info(`[id=${socket.id}] Client connected`);
     socket.join(socket.request._query.id);
-    socket.on("post-joinRoom", (uid, rid) => {
-        console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Joined room.`);
-        gameCtrl.updateSockID(uid, socket.id, rid);
-        socket.join(rid);
+    socket.on("post-joinRoom", (rquid, rqrid) => {
+        console.info(`[sid=${socket.id} | uid=${rquid} | rid=${rqrid}] Joined room.`);
+        gameCtrl.internalUpdateSockID(rquid, socket.id, rqrid);
+        uid = rquid;
+        rid = rqrid;
+        socket.join(rqrid);
+        busy = false;
     });
-    socket.on("post-ready", (uid, rid, status) => {
+    socket.on("post-ready", (status) => {
         console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Ready phase ${status}`);
-        socket.to(rid).emit("get-ready", uid, status);
-        gameCtrl.updateReadyStatus(uid, socket.id, rid, status).then((state) => {
-            if (state && status == 2) io.to(rid).emit("get-start", 2);
+        gameCtrl.internalUpdateReadyStatus(socket.id, status).then(async (res) => {
+            if (res) socket.to(rid).emit("get-ready", uid, status);
+            busy = false;
         });
     });
-    socket.on("post-start", (uid, rid) => {
+    const allReady = async (event) => {
+        busy = true;
+        while (busy) await new Promise((resolve) => setTimeout(resolve, 100));
+        const listenForAllReady = globalCache.get("listenForAllReady/"+rid);
+        if (listenForAllReady) {
+            gameCtrl.internalUpdateAllReady(socket.id, 2).then((status) => {
+                if (status) {
+                    io.to(rid).emit("get-start", 2);
+                    globalCache.set("listenForAllReady/"+rid, false);
+                }
+            });
+        }
+    };
+    socket.onAny(allReady);
+    socket.on("post-start", () => {
         console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Start`);
-        gameCtrl.startGame(uid, socket.id, rid).then((status) => {
-            if (status) io.to(rid).emit("get-start", 1);
+        gameCtrl.startGame(socket.id).then((status) => {
+            if (status) {
+                io.to(rid).emit("get-start", 1);
+                globalCache.set("listenForAllReady/"+rid, true);
+            }
         });
+        busy = false;
     });
     socket.on("disconnect", () => {
+        gameCtrl.internalUpdateOnlineStatus(socket.id, false);
         console.info(`[id=${socket.id}] Client disconnected`);
+        busy = false;
     });
 });
 

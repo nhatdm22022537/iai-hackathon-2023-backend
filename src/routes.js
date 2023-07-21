@@ -1,8 +1,9 @@
 const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
+const gameCtrl = require("./controllers/gameController");
 const possessionCtrl = require("./controllers/PossessionController");
-const shop = require("./shop")
+const shop = require("./shop");
 export const initWebRoutes = (app) => {
     app.route("/")
         .get(homeCtrl.getHomePage);
@@ -33,6 +34,9 @@ export const initWebRoutes = (app) => {
 
     app.route("/room/get")
         .get(roomCtrl.getRoomInfo);
+
+    app.route("/game/get")
+        .get(gameCtrl.getGameStatus);
 
     app.route("/storage/get")
         .get(possessionCtrl.getUserPossession);
