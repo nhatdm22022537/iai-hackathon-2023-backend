@@ -2,7 +2,7 @@ const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
 const possessionCtrl = require("./controllers/PossessionController");
-const shop = require("./shop");
+const shop = require("./shop")
 export const initWebRoutes = (app) => {
     app.route("/")
         .get(homeCtrl.getHomePage);
@@ -41,8 +41,8 @@ export const initWebRoutes = (app) => {
         .put(possessionCtrl.updateUserBalance);
 
     app.route("/shop")
-        .get(shop.getShop);
+        .get(shop.getShop)
 
-    app.route("/shop")
+    app.route("/shop/buy")
         .post(shop.buyItem);
 };

@@ -215,3 +215,53 @@ WS emit:
     key: "leave",
     data: <uid>
 ```
+
+- `/shop` (GET): Get all the items the shop currently have.
+Request: (Bodyless?)
+
+Response:
+```
+{
+    "hihi": {
+        "cost": 99999,
+        "name": "hihi",
+        "type": "skin",
+        "description": "blue eye's white dragonn"
+    }
+}
+```
+
+- `/shop/buy` (POST): Buy an item
+Request:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "item": "hihi"
+    }
+}
+```
+
+Response:
+- When buy successfully:
+```
+{
+    "data": "lol",
+    "msg": "thank for purchasing"
+}
+```
+
+- When buy failed (insufficient balance):
+```
+{
+    "data": "lol",
+    "msg": "gtfo poor people"
+}
+```
+- When buy failed (item possessed):
+```
+{
+    "data": "lol",
+    "msg": "you already have this item"
+}
+```
