@@ -41,7 +41,7 @@ export const initWebRoutes = (app) => {
         .put(possessionCtrl.updateUserBalance);
 
     app.route("/shop")
-        .get(shop.getShop)
+        .get(shop.getShop);
 
     app.route("/shop/buy")
         .post(shop.buyItem);
