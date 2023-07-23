@@ -2,8 +2,9 @@ const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
 const gameCtrl = require("./controllers/gameController");
-const possessionCtrl = require("./controllers/PossessionController");
-const shop = require("./shop");
+const possessionCtrl = require("./controllers/possessionController");
+const shopCtrl = require("./controllers/shopController");
+const groupCtrl = require("./controllers/groupController")
 export const initWebRoutes = (app) => {
     app.route("/")
         .get(homeCtrl.getHomePage);
@@ -45,8 +46,20 @@ export const initWebRoutes = (app) => {
         .put(possessionCtrl.updateUserBalance);
 
     app.route("/shop")
-        .get(shop.getShop);
+        .get(shopCtrl.getShop);
 
     app.route("/shop/buy")
-        .post(shop.buyItem);
+        .post(shopCtrl.buyItem);
+
+    app.route("/group")
+        .get(groupCtrl.getGroup);
+
+    app.route("/group/create")
+        .post(groupCtrl.createGroup);
+
+    app.route("/group/members/add")
+        .post(groupCtrl.groupAddMember);
+
+    app.route("/group/rooms/add")
+        .post(groupCtrl.groupAddNewRoom);
 };

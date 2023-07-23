@@ -6,27 +6,9 @@
     - cost: Cost, obviously
     - description: Item's description
 */
-import {Firestore} from "./config/firebaseInit";
-import {addItemToUser, internalUpdateUserBalance} from "./controllers/PossessionController";
-
-export class Item {
-    constructor(name, type, cost, description) {
-        this.name = name;
-        this.type = type;
-        this.cost = cost;
-        this.description = description;
-    }
-
-    // fuck getter and setter
-    toJSON() {
-        return {
-            name: this.name,
-            type: this.type,
-            cost: this.cost,
-            description: this.description,
-        };
-    }
-}
+import {Firestore} from "../config/firebaseInit";
+import {addItemToUser, internalUpdateUserBalance} from "./possessionController";
+import {Item} from "../models/Item";
 
 
 export const getShop = async (req, res) => {
