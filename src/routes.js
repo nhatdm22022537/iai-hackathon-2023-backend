@@ -60,6 +60,6 @@ export const initWebRoutes = (app) => {
     app.route("/group/members/add")
         .post(groupCtrl.groupAddMember);
 
-    app.route("/group/rooms/add")
+    app.route("/group/rooms/create")
         .post(groupCtrl.groupAddNewRoom);
 };

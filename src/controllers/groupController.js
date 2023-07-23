@@ -48,12 +48,11 @@ const internalGetCourses = async (groupId) => {
 export const getGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
-
     if (uid == "" || uid == null) {
         return res.json({msg: 'error', data: null})
     }
     const groupId = data.groupId;
-    let group = await internalGetGroup(uid, groupId);
+    let group = await internalGetGroup(groupId);
     if (group) {
         return res.json({msg: 'ok', data: group});
     } else {
