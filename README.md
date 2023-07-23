@@ -281,9 +281,144 @@ Response:
 ```
 
 ### Game module
-- This module uses WebSocket (specifically Socket.io) for the most part.
-- Each user will now be identified by a socket ID, and multiple socket ID can be used by a single user in the same time (i.e. an user can join multiple game at the same time).
+- This module uses WebSocket (aka WS), specifically Socket.io for the most part.
+- Each user will now be identified by a socket ID, and multiple socket ID can be used by a single user at the same time (i.e. an user can join multiple game at the same time).
+- The event name starting with `post-` is from client (you post the requests to the server), `get-` is from server (you get the updates from the server).
 
+#### Route `/game/get`
+Request (GET): Get the current data of this game (of course not including other players "sensitive" data).
+
+This should be (mostly) used whenever the user join in the first time, or when the user reconnect (to get the lost game data). The intended way to get the data in real-time is through listening to WS events.
+
+Note: The response is not entirely completed at the moment.
+- Requirement:
+    - The room's id.
+- Body:
+```
+{
+    "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+    "data": "sEGg69"
+}
+```
+  
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        "details": {},
+        "players": {
+            "QdAErfCdDOZl4sgDe3e0vlxPUWn1": {
+                "online": false,
+                "ready": 0
+            },
+            "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3": {
+                "online": false,
+                "ready": 9
+            }
+        }
+    }
+}
+```
+
+#### Event `post-joinRoom`
+Request server to join the current socket to a WS room, so that this socket can listen to events happening in the desired WS room.
+
+Note that it's different from the very first request to join a "game room" (use `/room/join` above). This can be used whenever the user reconnect.
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<Room's id>`
+
+Example:
+```
+hPnZoOJ5K3VPD9BWgo7KtxkuUBC3
+pngTjn
+```
+
+#### Event `get-join`
+Notify when a new user join the game room. It will be sent automatically to all user in the room by server when someone use `/room/join`.
+
+Body:
+- Arg1: `<New user details>`
+
+Example:
+```
+{
+    "uid": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+    "uname": "ball08",
+    "priv": "0",
+    "email": "maivannhatminh2005@gmail.com"
+}
+```
+
+#### Event `get-leave`
+Notify when a user leave the game room. It will be sent automatically to all user in the room by server when someone use `/room/leave`.
+
+Body:
+- Arg1: `<Left user's id>`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+```
+
+#### Event `get-state`
+Notify when a user is online/offline. It will be sent automatically to all user in the room by server when someone connect/disconnect.
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<State> (online: true / offline: false)`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+false
+```
+
+#### Event `get-ready`
+Notify when a user is ready. It will be sent automatically to all user in the room by server when someone update their ready state.
+
+There are 3 values possible:
+- `0`: User is not ready yet/cancel ready (needs to press ready button).
+- `1`: User pressed ready button (ready to participate).
+- `2`: User client loaded all the game content and fully prepared for the game (ready to start the timer).
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<State> (0: not ready, 1: pressed ready button / 2: fully prepared)`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+1
+```
+
+#### Event `post-ready`
+Post the current user ready status to the server.
+
+There are 3 values possible:
+- `0`: User is not ready yet/cancel ready (needs to press ready button).
+- `1`: User pressed ready button (ready to participate).
+- `2`: User client loaded all the game content and fully prepared for the game (ready to start the timer).
+
+Body:
+- Arg1: `<State> (0: not ready, 1: pressed ready button / 2: fully prepared)`
+
+#### Event `get-start`
+Notify when the game started/the timer started.
+
+There are 2 values possible:
+- `1`: Owner pressed the start button (and then all players started to load the game content...).
+- `2`: **All** user had loaded the game content and fully prepared for the game (start the timer).
+
+Body:
+- Arg1: `<State> (1: pressed start button / 2: fully prepared)`
+
+#### Event `post-start`
+Post the request to start the game. Only the owner can post this request (others' will be ignored).
+
+Body: None.
 
 ### Shop module
 #### Route `/shop` 

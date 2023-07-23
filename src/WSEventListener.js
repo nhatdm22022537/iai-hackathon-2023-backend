@@ -26,6 +26,7 @@ io.on("connection", (socket) => {
         uid = rquid;
         rid = rqrid;
         socket.join(rqrid);
+        io.to(rid).emit("get-state", uid, true);
         busy = false;
     });
     socket.on("post-ready", (status) => {
@@ -68,6 +69,7 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         gameCtrl.internalUpdateOnlineStatus(socket.id, false);
+        io.to(rid).emit("get-state", uid, false);
         console.info(`[id=${socket.id}] Client disconnected`);
         busy = false;
     });
