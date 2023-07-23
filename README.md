@@ -476,3 +476,112 @@ Response:
     "msg": "you already have this item"
 }
 ```
+### Group module 
+#### Route `/group/get`
+Request (GET): Get the required group
+- Requirement:
+  - groupId
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "groupId": "tk6YtR"
+    }
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        "groupId": "tk6YtR",
+        "name": "TeamOne",
+        "description": "20 mil",
+        "ownerId": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3"
+    }
+}
+```
+
+#### Route `group/create`
+Request (POST): Create a new group
+- Requirement: 
+  - user's id
+  - group's data
+- Body 
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "name": "TeamOne",
+        "desc": "20 mil"
+
+    }
+}
+```
+
+Response:
+```
+{
+    "msg": "group created",
+    "data": {
+        "groupId": "tk6YtR",
+        "ownerId": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+        "name": "TeamOne",
+        "description": "20 mil"
+    }
+}
+```
+#### Route `/group/members/add`
+Request (POST): Add a member to the group
+- Requirement:
+  - groupId
+  - memberId
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "groupId": "tk6YtR",
+        "member": "xd8dbmwQ0ES6Uy5iwFGPri1v0Cu2"
+    }
+}
+```
+
+Response:
+```
+{
+    "msg": "added member",
+    "data": "xd8dbmwQ0ES6Uy5iwFGPri1v0Cu2"
+}
+```
+
+#### Route `group/rooms/create`
+Request (POST): Add a new room into the group
+- Requirement:
+  - user's id
+  - group data
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "groupId": "tk6YtR",
+        "roomData": {
+            "name":"",
+            "desc":"",
+            "diff":"",
+            "testId":"",
+            "qNum":""
+        }
+    }
+}
+```
+Response:
+```
+{
+    "msg": "added new room",
+    "data": "5v6hrh"
+}
+```

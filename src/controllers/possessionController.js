@@ -29,10 +29,10 @@ export const setUserPossession = (uid, data) => {
     Firestore.collection("storage").doc(uid)
         .set({balance: balance, items: items})
         .then(() => {
-            console.log("possession set");
+            console.log('possession set')
         })
         .catch((error) => {
-            console.log(error);
+            console.log(error)
         });
 };
 
@@ -57,11 +57,11 @@ const updateBalance = async (uid, action, amount) => {
     if (amount < 0) {
         return null;
     }
-    if (action === "set") {
+    if (action === 'set') {
         return amount;
-    } else if (action === "deposit") {
+    } else if (action === 'deposit') {
         return currentBalance + amount;
-    } else if (action === "withdraw") {
+    } else if (action === 'withdraw') {
         if (currentBalance < amount) {
             return null;
         }
@@ -73,7 +73,7 @@ export const updateUserBalance = async (req, res) => {
     const uid = req.body.uid;
     const amount = req.body.data.amount;
     const action = req.body.data.action;
-    const newBalance = await updateBalance(uid, action, amount);
+    const newBalance = await updateBalance(uid, action, amount)
     if (uid == null || uid == "") {
         return res.json({"data": null, "msg": "err User not vaild"});
     }
@@ -84,7 +84,7 @@ export const updateUserBalance = async (req, res) => {
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
-            return res.json({"currentBalance": newBalance, "msg": "ok"});
+            return res.json({"currentBalance": newBalance, "msg": "ok"})
         })
         .catch((error) => {
             return res.json({"data": null, "msg": "err " + error});
@@ -102,7 +102,7 @@ export const internalUpdateUserBalance = async (uid, action, amount) => {
     Firestore.collection("storage").doc(uid)
         .update("balance", newBalance)
         .then(() => {
-            console.log("balance updated");
+            console.log('balance updated');
         })
         .catch((error) => {
             console.log(error);
