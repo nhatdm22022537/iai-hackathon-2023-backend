@@ -9,7 +9,7 @@ export const internalGetGameInfo = async (rid) => {
     if (arr == null) return false;
     arr.forEach((e) => {
         Object.assign(gameData.players, {
-            [e.uid]: {
+            [e.user.uid]: {
                 online: false,
                 ready: (e.data.mode == 9 ? 9 : 0),
             },

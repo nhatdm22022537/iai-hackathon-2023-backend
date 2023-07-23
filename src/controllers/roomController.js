@@ -19,7 +19,6 @@ export const internalUpdateCacheListRoom = async (rid) => {
                 await internalGetUserInfo(key).then((data) => {
                     if (data) {
                         arr.push({
-                            uid: key,
                             user: data,
                             data: value,
                         });
@@ -63,9 +62,10 @@ export const createRoom = async (req, res) => {
         "owner": uid, // Owner of the room (creator) (string)
         "name": data.name || "", // Name of the room (string)
         "desc": data.desc || "", // Description of the room (string)
-        "diff": data.diff || 0, // Difficulty of the game (integer)
-        "testId": data.testId || "", // Id of the test saved locally (string)
-        "qNum": data.qNum || "", // Number of question (integer)
+        "diff": data.diff || 0.0, // Difficulty of the game (float - [0 to 1])
+        "tframe": data.tframe || 30, // Maximum time allowed to answer a question (integer - second)
+        "testid": data.testid || "", // Id of the test (saved in Flask) (string)
+        "qnum": data.qnum || 0, // Number of question (integer)
     })
         .then(() => {
 
@@ -163,7 +163,7 @@ export const joinRoom = (req, res) => {
     };
     internalUpdateCacheListRoom(rid).then(async (arr) => {
         if (arr == null) return res.json({"msg": "err Invalid room", "data": null});
-        const idx = arr.map((e) => e.uid).indexOf(uid);
+        const idx = arr.map((e) => e.user.uid).indexOf(uid);
         if (idx > -1) return res.json({"msg": "err User joined before", "data": null});
         const newUser = await internalGetUserInfo(uid);
         if (newUser == null) return res.json({"msg": "err User not valid", "data": null});
@@ -173,7 +173,6 @@ export const joinRoom = (req, res) => {
             } else {
                 sendMessage(rid, "get-join", newUser);
                 arr.push({
-                    uid: uid,
                     user: newUser,
                     data: initVal,
                 });
@@ -192,7 +191,7 @@ export const leaveRoom = (req, res) => {
     }
     internalUpdateCacheListRoom(rid).then((arr) => {
         if (arr == null) return res.json({"msg": "err Invalid room", "data": null});
-        const idx = arr.map((e) => e.uid).indexOf(uid);
+        const idx = arr.map((e) => e.user.uid).indexOf(uid);
         if (idx < 0) return res.json({"msg": "err User left before", "data": null});
         Database.ref("rooms_data/"+rid+"/userPart").child(uid).remove((error) => {
             if (error) {

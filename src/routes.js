@@ -30,7 +30,7 @@ export const initWebRoutes = (app) => {
     app.route("/room/leave")
         .post(roomCtrl.leaveRoom);
 
-    app.route("/room/list")
+    app.route("/room/userlist")
         .get(roomCtrl.getRoomUserList);
 
     app.route("/room/get")

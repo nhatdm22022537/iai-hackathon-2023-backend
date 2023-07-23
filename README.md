@@ -17,7 +17,8 @@ npm start
 ## Usage
 ### General
 - The route can be found in the `routes.js` file.
-- All request must be in JSON raw format like this:
+- The front-end should try to validate the user input first (although we tried to validate as thorough as possible).
+- All request must be in JSON raw format like this (the `uid` or `data` is not needed every time but just add for safety measures):
 ```
 {
     "uid": <the user's current uid>,
@@ -90,7 +91,11 @@ Response:
 Request (POST): Create a new room, current user is the owner.
 
 - Requirement: 
-    - Require the room's data. Return the newly created room's id (rid).
+    - Require the room's data (as many as possible). Return the newly created room's id (rid).
+    - The value of `testid` and `qnum` must be obtained first (by Flask server's API) before sending to this server.
+    - `testid` and `qnum` can be blank (if user didn't upload the question file before).
+    - `diff` represent the difficulty of the game, please set it in the range from `0` to `1` as float.
+    - `tframe` is the maximum time allowed to answer a question (in seconds).
     - The rid uses base56 character set (`23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz`).
 - Body:
 ```
@@ -98,7 +103,11 @@ Request (POST): Create a new room, current user is the owner.
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
     "data": {
         "name": "t1 is the winner",
-        "desc": "never gonna happen"
+        "desc": "never gonna happen",
+        "diff": 0.2,
+        "tframe": 25,
+        "testid": "f3cb7dc5bcda46d7999d0daaacefb4d6"
+        "qnum": 69,
     }
 }
 ```
@@ -122,6 +131,7 @@ Request (POST): Update the data of the desired room. Only change if the user sen
     "data": {
         "desc": "save me",
         "name": "cute name",
+        "diff": 0.3,
         "rid": "4naDWJ"
     }
 }
@@ -174,8 +184,56 @@ Response:
         "owner": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
         "name": "t1 is the winner",
         "rid": "5MAtq9",
-        "desc": "kill me"
+        "desc": "kill me",
+        "diff": 0.2,
+        "tframe": 25,
+        "testid": "f3cb7dc5bcda46d7999d0daaacefb4d6"
+        "qnum": 69,
     }
+}
+```
+
+#### Route `/room/userlist` 
+
+Request (GET): Get the current user list and their details of the desired room.
+- Requirement:
+    - The room's id.
+- Body:
+```
+{
+    "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+    "data": "sEGg69"
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": [
+        {
+            "user": {
+                "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+                "priv": "0",
+                "email": "kna@gmail.com",
+                "uname": "knc"
+            },
+            "data": {
+                "mode": 9
+            }
+        },
+        {
+            "user": {
+                "uid": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+                "uname": "ball08",
+                "priv": "0",
+                "email": "maivannhatminh2005@gmail.com"
+            },
+            "data": {
+                "mode": 1
+            }
+        }
+    ]
 }
 ```
 
@@ -183,7 +241,7 @@ Response:
 Request (POST): Join the desired room. 
 - Requirement:
     - Room's id.
-    - When execute, all users joined in the room will be notified (using WS).
+    - When execute, all users joined in the room will be notified (using WS, more detail in the WS section).
 - Body:
 ```
 {
@@ -198,13 +256,6 @@ Response:
     "msg": "ok",
     "data": null,
 }
-```
-
-WS emit:
-```
-    room: "sEGg69",
-    key: "join",
-    data: <user details>
 ```
 
 #### Route `/room/leave` 
@@ -212,7 +263,7 @@ WS emit:
 Request (POST): Leave the desired room. 
 - Requirement:
     - The room's id.
-    - When execute, all users joined in the room will be notified (using WS).
+    - When execute, all users joined in the room will be notified (using WS, more detail in the WS section).
 - Body:
 ```
 {
@@ -229,12 +280,145 @@ Response:
 }
 ```
 
-WS emit:
+### Game module
+- This module uses WebSocket (aka WS), specifically Socket.io for the most part.
+- Each user will now be identified by a socket ID, and multiple socket ID can be used by a single user at the same time (i.e. an user can join multiple game at the same time).
+- The event name starting with `post-` is from client (you post the requests to the server), `get-` is from server (you get the updates from the server).
+
+#### Route `/game/get`
+Request (GET): Get the current data of this game (of course not including other players "sensitive" data).
+
+This should be (mostly) used whenever the user join in the first time, or when the user reconnect (to get the lost game data). The intended way to get the data in real-time is through listening to WS events.
+
+Note: The response is not entirely completed at the moment.
+- Requirement:
+    - The room's id.
+- Body:
 ```
-    room: "sEGg69",
-    key: "leave",
-    data: <uid>
+{
+    "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+    "data": "sEGg69"
+}
 ```
+  
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        "details": {},
+        "players": {
+            "QdAErfCdDOZl4sgDe3e0vlxPUWn1": {
+                "online": false,
+                "ready": 0
+            },
+            "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3": {
+                "online": false,
+                "ready": 9
+            }
+        }
+    }
+}
+```
+
+#### Event `post-joinRoom`
+Request server to join the current socket to a WS room, so that this socket can listen to events happening in the desired WS room.
+
+Note that it's different from the very first request to join a "game room" (use `/room/join` above). This can be used whenever the user reconnect.
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<Room's id>`
+
+Example:
+```
+hPnZoOJ5K3VPD9BWgo7KtxkuUBC3
+pngTjn
+```
+
+#### Event `get-join`
+Notify when a new user join the game room. It will be sent automatically to all user in the room by server when someone use `/room/join`.
+
+Body:
+- Arg1: `<New user details>`
+
+Example:
+```
+{
+    "uid": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+    "uname": "ball08",
+    "priv": "0",
+    "email": "maivannhatminh2005@gmail.com"
+}
+```
+
+#### Event `get-leave`
+Notify when a user leave the game room. It will be sent automatically to all user in the room by server when someone use `/room/leave`.
+
+Body:
+- Arg1: `<Left user's id>`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+```
+
+#### Event `get-state`
+Notify when a user is online/offline. It will be sent automatically to all user in the room by server when someone connect/disconnect.
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<State> (online: true / offline: false)`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+false
+```
+
+#### Event `get-ready`
+Notify when a user is ready. It will be sent automatically to all user in the room by server when someone update their ready state.
+
+There are 3 values possible:
+- `0`: User is not ready yet/cancel ready (needs to press ready button).
+- `1`: User pressed ready button (ready to participate).
+- `2`: User client loaded all the game content and fully prepared for the game (ready to start the timer).
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<State> (0: not ready, 1: pressed ready button / 2: fully prepared)`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+1
+```
+
+#### Event `post-ready`
+Post the current user ready status to the server.
+
+There are 3 values possible:
+- `0`: User is not ready yet/cancel ready (needs to press ready button).
+- `1`: User pressed ready button (ready to participate).
+- `2`: User client loaded all the game content and fully prepared for the game (ready to start the timer).
+
+Body:
+- Arg1: `<State> (0: not ready, 1: pressed ready button / 2: fully prepared)`
+
+#### Event `get-start`
+Notify when the game started/the timer started.
+
+There are 2 values possible:
+- `1`: Owner pressed the start button (and then all players started to load the game content...).
+- `2`: **All** user had loaded the game content and fully prepared for the game (start the timer).
+
+Body:
+- Arg1: `<State> (1: pressed start button / 2: fully prepared)`
+
+#### Event `post-start`
+Post the request to start the game. Only the owner can post this request (others' will be ignored).
+
+Body: None.
 
 ### Shop module
 #### Route `/shop` 
