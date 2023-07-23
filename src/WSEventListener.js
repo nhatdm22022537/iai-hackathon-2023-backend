@@ -59,6 +59,13 @@ io.on("connection", (socket) => {
         });
         busy = false;
     });
+
+    // socket.on("post-answer", (noQues, ans) => {
+    //     console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Question ${noQues}, chose ${ans}`);
+
+    //     busy = false;
+    // });
+
     socket.on("disconnect", () => {
         gameCtrl.internalUpdateOnlineStatus(socket.id, false);
         console.info(`[id=${socket.id}] Client disconnected`);

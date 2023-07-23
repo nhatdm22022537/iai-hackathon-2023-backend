@@ -17,7 +17,8 @@ npm start
 ## Usage
 ### General
 - The route can be found in the `routes.js` file.
-- All request must be in JSON raw format like this:
+- The front-end should try to validate the user input first (although we tried to validate as thorough as possible).
+- All request must be in JSON raw format like this (the `uid` or `data` is not needed every time but just add for safety measures):
 ```
 {
     "uid": <the user's current uid>,
@@ -90,7 +91,11 @@ Response:
 Request (POST): Create a new room, current user is the owner.
 
 - Requirement: 
-    - Require the room's data. Return the newly created room's id (rid).
+    - Require the room's data (as many as possible). Return the newly created room's id (rid).
+    - The value of `testid` and `qnum` must be obtained first (by Flask server's API) before sending to this server.
+    - `testid` and `qnum` can be blank (if user didn't upload the question file before).
+    - `diff` represent the difficulty of the game, please set it in the range from `0` to `1` as float.
+    - `tframe` is the maximum time allowed to answer a question (in seconds).
     - The rid uses base56 character set (`23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz`).
 - Body:
 ```
@@ -98,7 +103,11 @@ Request (POST): Create a new room, current user is the owner.
     "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
     "data": {
         "name": "t1 is the winner",
-        "desc": "never gonna happen"
+        "desc": "never gonna happen",
+        "diff": 0.2,
+        "tframe": 25,
+        "testid": "f3cb7dc5bcda46d7999d0daaacefb4d6"
+        "qnum": 69,
     }
 }
 ```
@@ -122,6 +131,7 @@ Request (POST): Update the data of the desired room. Only change if the user sen
     "data": {
         "desc": "save me",
         "name": "cute name",
+        "diff": 0.3,
         "rid": "4naDWJ"
     }
 }
@@ -174,8 +184,56 @@ Response:
         "owner": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
         "name": "t1 is the winner",
         "rid": "5MAtq9",
-        "desc": "kill me"
+        "desc": "kill me",
+        "diff": 0.2,
+        "tframe": 25,
+        "testid": "f3cb7dc5bcda46d7999d0daaacefb4d6"
+        "qnum": 69,
     }
+}
+```
+
+#### Route `/room/userlist` 
+
+Request (GET): Get the current user list and their details of the desired room.
+- Requirement:
+    - The room's id.
+- Body:
+```
+{
+    "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+    "data": "sEGg69"
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": [
+        {
+            "user": {
+                "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+                "priv": "0",
+                "email": "kna@gmail.com",
+                "uname": "knc"
+            },
+            "data": {
+                "mode": 9
+            }
+        },
+        {
+            "user": {
+                "uid": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+                "uname": "ball08",
+                "priv": "0",
+                "email": "maivannhatminh2005@gmail.com"
+            },
+            "data": {
+                "mode": 1
+            }
+        }
+    ]
 }
 ```
 
@@ -183,7 +241,7 @@ Response:
 Request (POST): Join the desired room. 
 - Requirement:
     - Room's id.
-    - When execute, all users joined in the room will be notified (using WS).
+    - When execute, all users joined in the room will be notified (using WS, more detail in the WS section).
 - Body:
 ```
 {
@@ -198,13 +256,6 @@ Response:
     "msg": "ok",
     "data": null,
 }
-```
-
-WS emit:
-```
-    room: "sEGg69",
-    key: "join",
-    data: <user details>
 ```
 
 #### Route `/room/leave` 
@@ -212,7 +263,7 @@ WS emit:
 Request (POST): Leave the desired room. 
 - Requirement:
     - The room's id.
-    - When execute, all users joined in the room will be notified (using WS).
+    - When execute, all users joined in the room will be notified (using WS, more detail in the WS section).
 - Body:
 ```
 {
@@ -229,12 +280,10 @@ Response:
 }
 ```
 
-WS emit:
-```
-    room: "sEGg69",
-    key: "leave",
-    data: <uid>
-```
+### Game module
+- This module uses WebSocket (specifically Socket.io) for the most part.
+- Each user will now be identified by a socket ID, and multiple socket ID can be used by a single user in the same time (i.e. an user can join multiple game at the same time).
+
 
 ### Shop module
 #### Route `/shop` 
