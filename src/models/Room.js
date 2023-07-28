@@ -15,7 +15,7 @@ export class Room {
             "name": this.name || "", // Name of the room (string)
             "desc": this.description || "", // Description of the room (string)
             "diff": this.difficulty || 0, // Difficulty of the game (integer)
-            "tframe": data.tframe || 30, // Maximum time allowed to answer a question (integer - second)
+            "tframe": this.tframe || 30, // Maximum time allowed to answer a question (integer - second)
             "testId": this.testId || "", // Id of the test saved locally (string)
             "qNum": this.questionNum || "", // Number of question (integer)
         };
