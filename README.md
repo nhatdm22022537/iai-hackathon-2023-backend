@@ -386,7 +386,7 @@ There are 3 values possible:
 
 Body:
 - Arg1: `<User's id>`
-- Arg2: `<State> (0: not ready, 1: pressed ready button / 2: fully prepared)`
+- Arg2: `<State> (0: not ready / 1: pressed ready button / 2: fully prepared)`
 
 Example:
 ```
@@ -395,7 +395,7 @@ QdAErfCdDOZl4sgDe3e0vlxPUWn1
 ```
 
 #### Event `post-ready`
-Post the current user ready status to the server.
+Post the current user's ready status to the server.
 
 There are 3 values possible:
 - `0`: User is not ready yet/cancel ready (needs to press ready button).
@@ -419,6 +419,32 @@ Body:
 Post the request to start the game. Only the owner can post this request (others' will be ignored).
 
 Body: None.
+
+#### Event `post-answer`
+Post the user's answer of a specific question to the server.
+
+Body:
+- Arg1: `<Question Number> (index start from 0)`
+- Arg2: `<User's answer> (index start from 0, i.e 0=A, 1=B, 2=C, 3=D)`
+
+Example (Fifth question, chose A):
+```
+4
+0
+```
+
+#### Event `get-answer`
+Get the server's verdict of the user's answer.
+
+Body:
+- Arg1: `<Question Number> (index start from 0)`
+- Arg2: `<Verdict> (false = Incorrect, true = Correct)`
+
+Example (Fifth question, user was correct):
+```
+4
+true
+```
 
 ### Shop module
 #### Route `/shop` 
