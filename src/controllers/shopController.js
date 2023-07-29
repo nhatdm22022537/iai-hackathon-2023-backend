@@ -19,7 +19,7 @@ export const getShop = async (req, res) => {
         const doc = snapshot.data();
         itemList[doc.name] = doc;
     });
-    return res.json(itemList);
+    return res.json({msg:"ok", itemList:itemList});
 };
 
 // param 'item' is in JSON format. Can be passed with toJSON method.
@@ -63,7 +63,7 @@ export const buyItem = async (req, res) => {
         await internalUpdateUserBalance(uid, "withdraw", itemData.cost);
         return res.json({"data": "lol", "msg": "ok thank for purchasing"});
     } else {
-        return res.json({"data": "lol", "msg": "err gtfo poor people"});
+        return res.json({"data": "lol", "msg": "err insufficient balance"});
     }
 };
 
