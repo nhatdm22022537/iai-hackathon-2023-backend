@@ -6,10 +6,10 @@ export class User {
 
     // getters
     toJSON() {
-       return {
-           id: this.id,
-           name: this.name
-       };
+        return {
+            id: this.id,
+            name: this.name,
+        };
     }
     // setters
     set setName(name) {

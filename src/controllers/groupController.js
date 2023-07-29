@@ -9,7 +9,7 @@ const internalGetGroup = async (groupId) => {
     if (groupId == null || groupId == "") {
         return null;
     }
-    const groupData = await Firestore.collection('group')
+    const groupData = await Firestore.collection("group")
         .doc(groupId)
         .get();
     if (!groupData.exists) {
@@ -17,54 +17,54 @@ const internalGetGroup = async (groupId) => {
     } else {
         return groupData.data();
     }
-}
+};
 const internalGetMembers = async (groupId) => {
-    let groupData = await internalGetGroup(groupId);
+    const groupData = await internalGetGroup(groupId);
     if (groupData === null) {
         return null;
     } else {
         return groupData.members;
     }
-}
+};
 
 const internalGetRooms = async (groupId) => {
-    let groupData = await internalGetGroup(groupId);
+    const groupData = await internalGetGroup(groupId);
     if (groupData === null) {
         return null;
     } else {
         return groupData.rooms;
     }
-}
+};
 
 const internalGetCourses = async (groupId) => {
-    let groupData = await internalGetGroup(groupId);
+    const groupData = await internalGetGroup(groupId);
     if (groupData === null) {
         return null;
     } else {
         return groupData.courses;
     }
-}
+};
 
 export const getGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: 'error', data: null})
+        return res.json({msg: "err", data: null});
     }
     const groupId = data.groupId;
-    let group = await internalGetGroup(groupId);
+    const group = await internalGetGroup(groupId);
     if (group) {
-        return res.json({msg: 'ok', data: group});
+        return res.json({msg: "ok", data: group});
     } else {
-        return res.json({msg: 'error', data: null});
+        return res.json({msg: "err", data: null});
     }
-}
+};
 
 export const createGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: 'error', data: null})
+        return res.json({msg: "err", data: null});
     }
     const name = data.name;
     const desc = data.desc;
@@ -87,34 +87,34 @@ export const createGroup = async (req, res) => {
         desc,
         members || {},
         rooms || {},
-        courses || {}
+        courses || {},
     );
 
-    Firestore.collection('group').doc(groupId).set(
-        newGroup.infoToJSON()
+    Firestore.collection("group").doc(groupId).set(
+        newGroup.infoToJSON(),
     ).then(() => {
-        Database.ref(`groups/${groupId}/members`).child(uid).set({role: 'owner'});
-        return res.json({msg: 'group created', data: data.infoToJSON()});
+        Database.ref(`groups/${groupId}/members`).child(uid).set({role: "owner"});
+        return res.json({msg: "ok group created", data: data.infoToJSON()});
     }, (error) => {
-        return res.json({msg: error, data: null});
+        return res.json({msg: "err " + error, data: null});
     });
-}
+};
 export const groupAddMember = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: 'error', data: null})
+        return res.json({msg: "err No UID", data: null});
     }
     const groupId = data.groupId;
     const memberId = data.member;
     const group = await internalGetGroup(groupId);
     const user = await internalGetUserInfo(memberId);
     if (group == null || user == null) {
-        return (group == null) ? res.json({msg: "invalid group", data: null}) : res.json({msg:"invalid user", data:null});
+        return (group == null) ? res.json({msg: "err invalid group", data: null}) : res.json({msg: "err invalid user", data: null});
     }
     await Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member"});
-    return res.json({msg: "added member", data: memberId});
-}
+    return res.json({msg: "ok added member", data: memberId});
+};
 const internalCreateRoom = async (uid, data) => {
     if (uid == null || uid == "") {
         return null;
@@ -127,13 +127,13 @@ const internalCreateRoom = async (uid, data) => {
             .get();
         if (!tmpDoc.exists) ok = true;
     }
-    let newRoom = new Room(rid,
+    const newRoom = new Room(rid,
         uid,
         data.name || "",
         data.desc || "",
         data.diff || "",
         data.testId || 0,
-        data.qNum || 0
+        data.qNum || 0,
     );
     Firestore.collection("rooms").doc(rid)
         .set(newRoom.toJSON())
@@ -147,26 +147,25 @@ const internalCreateRoom = async (uid, data) => {
         () => {
             internalUpdateCacheListRoom(rid);
         },
-        (error) => (console.log(error))
-    )
+        (error) => (console.log(error)),
+    );
     return rid;
-}
+};
 export const groupAddNewRoom = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: 'error', data: null})
+        return res.json({msg: "err", data: null});
     }
     const groupId = data.groupId;
     const roomData = data.roomData;
     const group = await internalGetGroup(groupId);
 
     if (group == null) {
-        return res.json({msg: "invalid group", data: null});
+        return res.json({msg: "err invalid group", data: null});
     }
     const roomId = await internalCreateRoom(uid, roomData);
-    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status:"ok"});
-    return res.json({msg: "added new room", data: roomId});
-
-}
+    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status: "ok"});
+    return res.json({msg: "ok added new room", data: roomId});
+};
 

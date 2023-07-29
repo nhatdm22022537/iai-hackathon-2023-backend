@@ -11,7 +11,7 @@ export class Course {
         return {
             name: this.name,
             description: this.description,
-            data: this.data
+            data: this.data,
         };
     }
     // setters
