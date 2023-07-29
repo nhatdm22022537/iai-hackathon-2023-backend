@@ -284,6 +284,7 @@ Response:
 - This module uses WebSocket (aka WS), specifically Socket.io for the most part.
 - Each user will now be identified by a socket ID, and multiple socket ID can be used by a single user at the same time (i.e. an user can join multiple game at the same time).
 - The event name starting with `post-` is from client (you post the requests to the server), `get-` is from server (you get the updates from the server).
+- Note: You would need the Flask server running to be able to check for the answer.
 
 #### Route `/game/get`
 Request (GET): Get the current data of this game (of course not including other players "sensitive" data).
@@ -386,7 +387,7 @@ There are 3 values possible:
 
 Body:
 - Arg1: `<User's id>`
-- Arg2: `<State> (0: not ready, 1: pressed ready button / 2: fully prepared)`
+- Arg2: `<State> (0: not ready / 1: pressed ready button / 2: fully prepared)`
 
 Example:
 ```
@@ -395,7 +396,7 @@ QdAErfCdDOZl4sgDe3e0vlxPUWn1
 ```
 
 #### Event `post-ready`
-Post the current user ready status to the server.
+Post the current user's ready status to the server.
 
 There are 3 values possible:
 - `0`: User is not ready yet/cancel ready (needs to press ready button).
@@ -419,6 +420,36 @@ Body:
 Post the request to start the game. Only the owner can post this request (others' will be ignored).
 
 Body: None.
+
+#### Event `post-answer`
+Post the user's answer of a specific question to the server.
+
+Note: You would need the Flask server running.
+
+Body:
+- Arg1: `<Question Number> (index start from 0)`
+- Arg2: `<User's answer> (index start from 0, i.e 0=A, 1=B, 2=C, 3=D)`
+
+Example (Fifth question, chose A):
+```
+4
+0
+```
+
+#### Event `get-answer`
+Get the server's verdict of the user's answer.
+
+Note: You would need the Flask server running.
+
+Body:
+- Arg1: `<Question Number> (index start from 0)`
+- Arg2: `<Verdict> (false = Incorrect, true = Correct)`
+
+Example (Fifth question, user was correct):
+```
+4
+true
+```
 
 ### Shop module
 #### Route `/shop` 

@@ -20,6 +20,7 @@ io.on("connection", (socket) => {
     let busy = false;
     console.info(`[id=${socket.id}] Client connected`);
     socket.join(socket.request._query.id);
+
     socket.on("post-joinRoom", (rquid, rqrid) => {
         console.info(`[sid=${socket.id} | uid=${rquid} | rid=${rqrid}] Joined room.`);
         gameCtrl.internalUpdateSockID(rquid, socket.id, rqrid);
@@ -29,6 +30,7 @@ io.on("connection", (socket) => {
         io.to(rid).emit("get-state", uid, true);
         busy = false;
     });
+
     socket.on("post-ready", (status) => {
         console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Ready phase ${status}`);
         gameCtrl.internalUpdateReadyStatus(socket.id, status).then(async (res) => {
@@ -36,9 +38,15 @@ io.on("connection", (socket) => {
             busy = false;
         });
     });
+
     const allReady = async (event) => {
         busy = true;
-        while (busy) await new Promise((resolve) => setTimeout(resolve, 100));
+        // im busy chotto matte
+        let retries = 100; // wait for 10s, thats it
+        while (busy && retries) {
+            retries -= 1;
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
         const listenForAllReady = globalCache.get("listenForAllReady/"+rid);
         if (listenForAllReady) {
             gameCtrl.internalUpdateAllReady(socket.id, 2).then((status) => {
@@ -49,23 +57,28 @@ io.on("connection", (socket) => {
             });
         }
     };
+
     socket.onAny(allReady);
+
     socket.on("post-start", () => {
         console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Start`);
-        gameCtrl.startGame(socket.id).then((status) => {
+        gameCtrl.startGame(socket.id).then(async (status) => {
             if (status) {
                 io.to(rid).emit("get-start", 1);
-                globalCache.set("listenForAllReady/"+rid, true);
+                await internalGetCorrectAnswer(rid); // starting to fetch answer
+                globalCache.set("listenForAllReady/"+rid, true); // only listen when server fully loaded
             }
+            busy = false;
         });
-        busy = false;
     });
 
-    // socket.on("post-answer", (noQues, ans) => {
-    //     console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Question ${noQues}, chose ${ans}`);
-
-    //     busy = false;
-    // });
+    socket.on("post-answer", (noQues, ans) => {
+        console.info(`[sid=${socket.id} | uid=${uid} | rid=${rid}] Question ${noQues}, chose ${ans}`);
+        gameCtrl.internalCheckAns(socket.id, noQues, ans).then((status) => {
+            socket.emit("get-answer", noQues, status);
+            busy = false;
+        });
+    });
 
     socket.on("disconnect", () => {
         gameCtrl.internalUpdateOnlineStatus(socket.id, false);

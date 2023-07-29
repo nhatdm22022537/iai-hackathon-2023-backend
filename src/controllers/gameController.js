@@ -1,5 +1,7 @@
 import {globalCache} from "../server";
 import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
+const axios = require("axios");
+require("dotenv").config();
 
 export const internalGetGameInfo = async (rid) => {
     let gameData = globalCache.get("gameDataPublic/"+rid);
@@ -17,6 +19,36 @@ export const internalGetGameInfo = async (rid) => {
     });
     globalCache.set("gameDataPublic/"+rid, gameData);
     return gameData;
+};
+
+export const internalGetCorrectAnswer = async (rid) => {
+    const gameAns = globalCache.get("gameAnswer/"+rid);
+    if (gameAns) return gameAns;
+    const testId = (await internalGetRoomInfo(rid)).testid;
+    return new Promise((resolve) => {
+        const config = {
+            method: "get",
+            maxBodyLength: Infinity,
+            url: `http://127.0.0.1:${process.env.BACKEND_FLASK_PORT}/data/${testId}/answers`,
+            headers: { },
+        };
+        axios.request(config)
+            .then((response) => {
+                globalCache.set("gameAnswer/"+rid, response.data.answers);
+                return resolve(response.data.answers);
+            })
+            .catch((error) => {
+                return resolve(null);
+            });
+    });
+};
+
+export const internalCheckAns = async (sid, noQues, ans) => {
+    const uid = globalCache.get("uidOfSid/"+sid);
+    const rid = globalCache.get("ridOfSid/"+sid);
+    if (uid == null || rid == null) return null;
+    const gameAns = await internalGetCorrectAnswer(rid);
+    return (gameAns[noQues] == ans);
 };
 
 export const internalUpdateAllReady = async (sid, status) => {
