@@ -4,13 +4,13 @@ const roomCtrl = require("./controllers/roomController");
 const gameCtrl = require("./controllers/gameController");
 const possessionCtrl = require("./controllers/possessionController");
 const shopCtrl = require("./controllers/shopController");
-const groupCtrl = require("./controllers/groupController")
+const groupCtrl = require("./controllers/groupController");
 export const initWebRoutes = (app) => {
     app.route("/")
         .get(homeCtrl.getHomePage);
 
     app.route("/user/get")
-        .get(userCtrl.getUserInfo);
+        .post(userCtrl.getUserInfo);
 
     app.route("/user/update")
         .post(userCtrl.setUserInfo);

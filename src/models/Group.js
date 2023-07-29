@@ -1,5 +1,4 @@
 export class Group {
-
     constructor(groupId, ownerId, name, description, members, rooms, courses) {
         // info
         this.groupId = groupId;
@@ -20,7 +19,7 @@ export class Group {
             groupId: this.groupId,
             ownerId: this.ownerId,
             name: this.name,
-            description: this.description
+            description: this.description,
         };
     }
 

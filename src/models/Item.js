@@ -28,5 +28,4 @@ export class Item {
     set setDescription(description) {
         this.description = description;
     }
-
 }

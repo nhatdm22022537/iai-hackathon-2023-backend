@@ -48,7 +48,7 @@ export const buyItem = async (req, res) => {
 
     const currentPossession = possession.data();
     if (currentPossession.items[item]) {
-        return res.json({"data": "lol", "msg": "you already have this item"});
+        return res.json({"data": "lol", "msg": "err you already have this item"});
     }
 
     const itemData = (await Firestore.collection("shop")
@@ -61,9 +61,9 @@ export const buyItem = async (req, res) => {
         const newItem = new Item(itemData.name, itemData.type, itemData.cost, itemData.description);
         await addItemToUser(uid, {item: item, itemInfo: newItem.toJSON()});
         await internalUpdateUserBalance(uid, "withdraw", itemData.cost);
-        return res.json({"data": "lol", "msg": "thank for purchasing"});
+        return res.json({"data": "lol", "msg": "ok thank for purchasing"});
     } else {
-        return res.json({"data": "lol", "msg": "gtfo poor people"});
+        return res.json({"data": "lol", "msg": "err gtfo poor people"});
     }
 };
 
