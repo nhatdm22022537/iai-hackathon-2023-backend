@@ -4,6 +4,7 @@ import {b56gen} from "../utils";
 import {internalGetUserInfo} from "./userController";
 import {createRoom, internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
 import {Room} from "../models/Room";
+require("dotenv").config();
 
 const internalGetGroup = async (groupId) => {
     if (groupId == null || groupId == "") {
