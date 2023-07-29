@@ -57,6 +57,9 @@ export const initWebRoutes = (app) => {
     app.route("/group/create")
         .post(groupCtrl.createGroup);
 
+    app.route("/group/delete")
+        .post(groupCtrl.deleteGroup);
+
     app.route("/group/members/add")
         .post(groupCtrl.groupAddMember);
 

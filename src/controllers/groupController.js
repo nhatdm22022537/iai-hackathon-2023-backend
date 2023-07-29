@@ -94,10 +94,27 @@ export const createGroup = async (req, res) => {
         newGroup.infoToJSON()
     ).then(() => {
         Database.ref(`groups/${groupId}/members`).child(uid).set({role: 'owner'});
-        return res.json({msg: 'group created', data: data.infoToJSON()});
+        return res.json({msg: 'group created', data: data.infoToJSON});
     }, (error) => {
         return res.json({msg: error, data: null});
     });
+}
+export const deleteGroup = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == "" || uid == null) {
+        return res.json({msg: 'error', data: null})
+    }
+    const groupId = data.groupId;
+    const group = await internalGetGroup(groupId);
+    const ownerId = group.ownerId;
+    if (uid !== ownerId) {
+        return res.json({msg: "invalid action"});
+    }
+    Firestore.collection('group').doc(groupId)
+        .delete();
+    Database.ref("groups").child(groupId).remove();
+    return res.json({msg:'hehe'});
 }
 export const groupAddMember = async (req, res) => {
     const uid = req.body.uid;
