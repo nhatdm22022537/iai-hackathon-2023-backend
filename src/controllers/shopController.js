@@ -19,7 +19,7 @@ export const getShop = async (req, res) => {
         const doc = snapshot.data();
         itemList[doc.name] = doc;
     });
-    return res.json({msg:"ok", itemList:itemList});
+    return res.json({msg: "ok", itemList: itemList});
 };
 
 // param 'item' is in JSON format. Can be passed with toJSON method.

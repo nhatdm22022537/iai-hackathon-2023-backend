@@ -14,10 +14,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({extended: false}));
-app.all('/err', (req, res, next) => {
-    const err = new Error(`Error`);
+app.all("/err", (req, res, next) => {
+    const err = new Error("Error");
     next(err);
-})
+});
 
 initWebRoutes(app);
 

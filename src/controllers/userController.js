@@ -24,7 +24,6 @@ export const internalGetUserInfo = async (uid) => {
 export const getUserInfo = async (req, res) => {
     const uid = req.body.uid;
     const resUID = req.body.data;
-    console.log(req.body);
     if (uid == null || uid == "" || resUID == null || resUID == "") return res.json({"msg": "err User not vaild", "data": null});
     const data = await internalGetUserInfo(resUID);
     if (data) return res.json({"msg": "ok", "data": data});
