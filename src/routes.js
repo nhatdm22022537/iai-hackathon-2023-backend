@@ -5,6 +5,7 @@ const gameCtrl = require("./controllers/gameController");
 const possessionCtrl = require("./controllers/possessionController");
 const shopCtrl = require("./controllers/shopController");
 const groupCtrl = require("./controllers/groupController");
+const objCtrl = require("./controllers/frontEndObjectController");
 export const initWebRoutes = (app) => {
     app.route("/")
         .get(homeCtrl.getHomePage);
@@ -65,4 +66,11 @@ export const initWebRoutes = (app) => {
 
     app.route("/group/rooms/create")
         .post(groupCtrl.groupAddNewRoom);
+
+    app.route("/object/get")
+        .post(objCtrl.getObject);
+
+    app.route("/object/post")
+        .post(objCtrl.postObject);
+
 };
