@@ -1,6 +1,5 @@
 import {Server} from "socket.io";
 import {globalCache} from "./server";
-const {instrument} = require("@socket.io/admin-ui");
 const gameCtrl = require("./controllers/gameController");
 
 require("dotenv").config();
@@ -9,7 +8,7 @@ const port = process.env.BACKEND_PORT || 5678;
 const ws_port = process.env.BACKEND_WS_PORT || 3456;
 export const io = new Server(ws_port, {
     cors: {
-        origin: ["http://localhost:"+port, "http://localhost:"+ws_port, "https://admin.socket.io/"],
+        origin: ["http://localhost:"+port, "http://localhost:"+ws_port],
     },
 });
 console.log("I can satisfy everyone' need in real-time at port " + ws_port);
@@ -119,11 +118,6 @@ io.on("connection", (socket) => {
 
     // when entire room is done
     // io.to(rid).disconnectSockets();
-});
-
-instrument(io, {
-    auth: false,
-    mode: "development",
 });
 
 export const sendMessage = (roomId, key, message) => {
