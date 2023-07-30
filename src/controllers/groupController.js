@@ -4,12 +4,13 @@ import {b56gen} from "../utils";
 import {internalGetUserInfo} from "./userController";
 import {createRoom, internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
 import {Room} from "../models/Room";
+require("dotenv").config();
 
 const internalGetGroup = async (groupId) => {
     if (groupId == null || groupId == "") {
         return null;
     }
-    const groupData = await Firestore.collection("group")
+    const groupData = await Firestore.collection('group')
         .doc(groupId)
         .get();
     if (!groupData.exists) {
@@ -17,54 +18,54 @@ const internalGetGroup = async (groupId) => {
     } else {
         return groupData.data();
     }
-};
+}
 const internalGetMembers = async (groupId) => {
-    const groupData = await internalGetGroup(groupId);
+    let groupData = await internalGetGroup(groupId);
     if (groupData === null) {
         return null;
     } else {
         return groupData.members;
     }
-};
+}
 
 const internalGetRooms = async (groupId) => {
-    const groupData = await internalGetGroup(groupId);
+    let groupData = await internalGetGroup(groupId);
     if (groupData === null) {
         return null;
     } else {
         return groupData.rooms;
     }
-};
+}
 
 const internalGetCourses = async (groupId) => {
-    const groupData = await internalGetGroup(groupId);
+    let groupData = await internalGetGroup(groupId);
     if (groupData === null) {
         return null;
     } else {
         return groupData.courses;
     }
-};
+}
 
 export const getGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: "err", data: null});
+        return res.json({msg: 'err invalid uid', data: null})
     }
     const groupId = data.groupId;
-    const group = await internalGetGroup(groupId);
+    let group = await internalGetGroup(groupId);
     if (group) {
-        return res.json({msg: "ok", data: group});
+        return res.json({msg: 'ok', data: group});
     } else {
-        return res.json({msg: "err", data: null});
+        return res.json({msg: 'err invalid group', data: null});
     }
-};
+}
 
 export const createGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: "err", data: null});
+        return res.json({msg: 'err invalid uid', data: null})
     }
     const name = data.name;
     const desc = data.desc;
@@ -87,34 +88,51 @@ export const createGroup = async (req, res) => {
         desc,
         members || {},
         rooms || {},
-        courses || {},
+        courses || {}
     );
 
-    Firestore.collection("group").doc(groupId).set(
-        newGroup.infoToJSON(),
+    Firestore.collection('group').doc(groupId).set(
+        newGroup.infoToJSON()
     ).then(() => {
-        Database.ref(`groups/${groupId}/members`).child(uid).set({role: "owner"});
-        return res.json({msg: "ok group created", data: data.infoToJSON()});
+        Database.ref(`groups/${groupId}/members`).child(uid).set({role: 'owner'});
+        return res.json({msg: 'ok group created', data: data.infoToJSON});
     }, (error) => {
-        return res.json({msg: "err " + error, data: null});
+        return res.json({msg: `err ${error}`, data: null});
     });
-};
+}
+export const deleteGroup = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == "" || uid == null) {
+        return res.json({msg: `err invalid uid`, data: null})
+    }
+    const groupId = data.groupId;
+    const group = await internalGetGroup(groupId);
+    const ownerId = group.ownerId;
+    if (uid !== ownerId) {
+        return res.json({msg: "err invalid action"});
+    }
+    Firestore.collection('group').doc(groupId)
+        .delete();
+    Database.ref("groups").child(groupId).remove();
+    return res.json({msg:'ok'});
+}
 export const groupAddMember = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: "err No UID", data: null});
+        return res.json({msg: 'error', data: null})
     }
     const groupId = data.groupId;
     const memberId = data.member;
     const group = await internalGetGroup(groupId);
     const user = await internalGetUserInfo(memberId);
     if (group == null || user == null) {
-        return (group == null) ? res.json({msg: "err invalid group", data: null}) : res.json({msg: "err invalid user", data: null});
+        return (group == null) ? res.json({msg: "err invalid group", data: null}) : res.json({msg:"err invalid user", data:null});
     }
     await Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member"});
     return res.json({msg: "ok added member", data: memberId});
-};
+}
 const internalCreateRoom = async (uid, data) => {
     if (uid == null || uid == "") {
         return null;
@@ -127,18 +145,18 @@ const internalCreateRoom = async (uid, data) => {
             .get();
         if (!tmpDoc.exists) ok = true;
     }
-    const newRoom = new Room(rid,
+    let newRoom = new Room(rid,
         uid,
         data.name || "",
         data.desc || "",
         data.diff || "",
         data.testId || 0,
-        data.qNum || 0,
+        data.qNum || 0
     );
     Firestore.collection("rooms").doc(rid)
         .set(newRoom.toJSON())
         .catch((error) => {
-            return console.log({"msg": "err "+error, "data": null});
+            return console.log({"msg": `err ${error}`, "data": null});
         });
 
     Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
@@ -147,15 +165,15 @@ const internalCreateRoom = async (uid, data) => {
         () => {
             internalUpdateCacheListRoom(rid);
         },
-        (error) => (console.log(error)),
-    );
+        (error) => (console.log(error))
+    )
     return rid;
-};
+}
 export const groupAddNewRoom = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: "err", data: null});
+        return res.json({msg: 'err invalid uid', data: null})
     }
     const groupId = data.groupId;
     const roomData = data.roomData;
@@ -165,7 +183,8 @@ export const groupAddNewRoom = async (req, res) => {
         return res.json({msg: "err invalid group", data: null});
     }
     const roomId = await internalCreateRoom(uid, roomData);
-    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status: "ok"});
+    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status:"ok"});
     return res.json({msg: "ok added new room", data: roomId});
-};
+
+}
 

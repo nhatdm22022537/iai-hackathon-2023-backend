@@ -5,12 +5,19 @@ export const internalGetUserInfo = async (uid) => {
     const cached = globalCache.get("users/" + uid);
     if (cached) return cached;
     else {
-        const doc = await Firestore.collection("user_data").doc(uid).get();
-        if (doc.exists) {
-            globalCache.set("users/" + uid, doc.data());
-            return doc.data();
+        try {
+            const doc = await Firestore.collection("user_data")
+                .doc(uid)
+                .get();
+            if (doc.exists) {
+                globalCache.set("users/" + uid, doc.data());
+                return doc.data();
+            } else {
+                return null;
+            }
+        } catch (err) {
+            return null;
         }
-        return null;
     }
 };
 

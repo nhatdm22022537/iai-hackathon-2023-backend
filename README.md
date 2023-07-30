@@ -460,11 +460,14 @@ Request (GET): Get all the items the shop currently have.
 Response:
 ```
 {
-    "hihi": {
-        "cost": 99999,
-        "name": "hihi",
-        "type": "skin",
-        "description": "blue eye's white dragonn"
+    "msg": "ok",
+    "itemList": {
+        "hihi": {
+            "cost": 99999,
+            "name": "hihi",
+            "type": "skin",
+            "description": "blue eye's white dragonn"
+        }
     }
 }
 ```
@@ -489,7 +492,7 @@ Response:
 ```
 {
     "data": "lol",
-    "msg": "thank for purchasing"
+    "msg": "ok thank for purchasing"
 }
 ```
 
@@ -497,14 +500,14 @@ Response:
 ```
 {
     "data": "lol",
-    "msg": "gtfo poor people"
+    "msg": "err insufficient balance"
 }
 ```
 - When buy failed (item possessed):
 ```
 {
     "data": "lol",
-    "msg": "you already have this item"
+    "msg": "err you already have this item"
 }
 ```
 ### Group module 
@@ -555,7 +558,7 @@ Request (POST): Create a new group
 Response:
 ```
 {
-    "msg": "group created",
+    "msg": "ok group created",
     "data": {
         "groupId": "tk6YtR",
         "ownerId": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
@@ -583,7 +586,7 @@ Request (POST): Add a member to the group
 Response:
 ```
 {
-    "msg": "added member",
+    "msg": "ok added member",
     "data": "xd8dbmwQ0ES6Uy5iwFGPri1v0Cu2"
 }
 ```
@@ -612,7 +615,7 @@ Request (POST): Add a new room into the group
 Response:
 ```
 {
-    "msg": "added new room",
+    "msg": "ok added new room",
     "data": "5v6hrh"
 }
 ```

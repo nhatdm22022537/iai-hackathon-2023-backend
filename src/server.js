@@ -5,6 +5,7 @@ const cors = require("cors");
 const NodeCache = require("node-cache");
 
 import morgan from "morgan";
+import {errorHandling} from "./errorHandling";
 require("dotenv").config();
 
 const app = express();
@@ -13,6 +14,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({extended: false}));
+app.all('/err', (req, res, next) => {
+    const err = new Error(`Error`);
+    next(err);
+})
 
 initWebRoutes(app);
 
@@ -23,3 +28,5 @@ app.listen(port, () => {
 });
 
 export const globalCache = new NodeCache({stdTTL: process.env.CACHE_TTL || 259200, checkperiod: process.env.CACHE_CHECK || 302400});
+
+app.use(errorHandling);
