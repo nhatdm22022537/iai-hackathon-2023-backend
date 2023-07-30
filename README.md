@@ -13,6 +13,14 @@ npm install
 ```
 npm start
 ```
+- If you are running in a development environment, run the server with:
+```
+npm run dev
+```
+- If running in a server, run the server by:
+    - Build: `npm run build`
+    - Serve: `npm run serve`
+    - Use `serve` whenever the server restarts, use `build` whenever the code changed.
 
 ## Usage
 ### General
