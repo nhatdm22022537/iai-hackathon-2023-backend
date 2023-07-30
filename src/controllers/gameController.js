@@ -69,6 +69,7 @@ export const internalUpdateOnlineStatus = async (status, uid, rid) => {
         Object.assign(gameData.players, {
             [uid]: {
                 online: status,
+                ready: 0,
             },
         });
     } else {
