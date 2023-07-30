@@ -67,6 +67,9 @@ export const initWebRoutes = (app) => {
     app.route("/group/rooms/create")
         .post(groupCtrl.groupAddNewRoom);
 
+    app.route("/group/rooms/add")
+        .post(groupCtrl.groupAddExistingRoom);
+
     app.route("/object/get")
         .post(objCtrl.getObject);
 
