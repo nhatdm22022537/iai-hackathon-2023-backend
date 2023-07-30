@@ -187,3 +187,25 @@ export const groupAddNewRoom = async (req, res) => {
     return res.json({msg: "ok added new room", data: roomId});
 };
 
+export const groupAddExistingRoom = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == "" || uid == null) {
+        return res.json({msg: 'err invalid uid', data: null})
+    }
+    const groupId = data.groupId;
+    const roomId = data.roomId;
+    const group = await internalGetGroup(groupId);
+
+    if (group == null) {
+        return res.json({msg: "err invalid group", data: null});
+    }
+
+    const room = await internalGetRoomInfo(roomId);
+    if (room == null) {
+        return res.json({msg: "err no such room", data: null});
+    }
+    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status:"ok"});
+    return res.json({msg: "ok added room", data: roomId});
+
+};
