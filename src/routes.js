@@ -32,28 +32,28 @@ export const initWebRoutes = (app) => {
         .post(roomCtrl.leaveRoom);
 
     app.route("/room/userlist")
-        .get(roomCtrl.getRoomUserList);
+        .post(roomCtrl.getRoomUserList);
 
     app.route("/room/get")
-        .get(roomCtrl.getRoomInfo);
+        .post(roomCtrl.getRoomInfo);
 
     app.route("/game/get")
-        .get(gameCtrl.getGameStatus);
+        .post(gameCtrl.getGameStatus);
 
     app.route("/storage/get")
-        .get(possessionCtrl.getUserPossession);
+        .post(possessionCtrl.getUserPossession);
 
     app.route("/storage/update")
-        .put(possessionCtrl.updateUserBalance);
+        .post(possessionCtrl.updateUserBalance);
 
     app.route("/shop")
-        .get(shopCtrl.getShop);
+        .post(shopCtrl.getShop);
 
     app.route("/shop/buy")
         .post(shopCtrl.buyItem);
 
     app.route("/group")
-        .get(groupCtrl.getGroup);
+        .post(groupCtrl.getGroup);
 
     app.route("/group/create")
         .post(groupCtrl.createGroup);
@@ -75,5 +75,4 @@ export const initWebRoutes = (app) => {
 
     app.route("/object/post")
         .post(objCtrl.postObject);
-
 };

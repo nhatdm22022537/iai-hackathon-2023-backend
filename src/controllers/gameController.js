@@ -38,21 +38,19 @@ export const internalGetCorrectAnswer = async (rid) => {
                 return resolve(response.data.answers);
             })
             .catch((error) => {
+                console.log("Flask server error: ", error);
                 return resolve(null);
             });
     });
 };
 
-export const internalCheckAns = async (sid, noQues, ans) => {
-    const uid = globalCache.get("uidOfSid/"+sid);
-    const rid = globalCache.get("ridOfSid/"+sid);
+export const internalCheckAns = async (noQues, ans, uid, rid) => {
     if (uid == null || rid == null) return null;
     const gameAns = await internalGetCorrectAnswer(rid);
     return (gameAns[noQues] == ans);
 };
 
-export const internalUpdateAllReady = async (sid, status) => {
-    const rid = globalCache.get("ridOfSid/"+sid);
+export const internalCheckAllReady = async (status, rid) => {
     if (rid == null) return null;
     const gameData = await internalGetGameInfo(rid);
     if (gameData == false) return null;
@@ -63,29 +61,26 @@ export const internalUpdateAllReady = async (sid, status) => {
     return true;
 };
 
-export const internalUpdateOnlineStatus = async (sid, status) => {
-    const uid = globalCache.get("uidOfSid/"+sid);
-    const rid = globalCache.get("ridOfSid/"+sid);
+export const internalUpdateOnlineStatus = async (status, uid, rid) => {
     if (uid == null || rid == null) return null;
     const gameData = await internalGetGameInfo(rid);
     if (gameData == false) return null;
-    Object.assign(gameData.players[uid], {
-        online: status,
-    });
+    if (gameData.players[uid] == null) {
+        Object.assign(gameData.players, {
+            [uid]: {
+                online: status,
+            },
+        });
+    } else {
+        Object.assign(gameData.players[uid], {
+            online: status,
+        });
+    }
     globalCache.set("gameDataPublic/"+rid, gameData);
     return true;
 };
 
-export const internalUpdateSockID = async (uid, sid, rid) => {
-    globalCache.set("ridOfSid/"+sid, rid);
-    globalCache.set("uidOfSid/"+sid, uid);
-    await internalUpdateOnlineStatus(sid, true);
-    return true;
-};
-
-export const internalUpdateReadyStatus = async (sid, status) => {
-    const uid = globalCache.get("uidOfSid/"+sid);
-    const rid = globalCache.get("ridOfSid/"+sid);
+export const internalUpdateReadyStatus = async (status, uid, rid) => {
     if (uid == null || rid == null) return null;
     const gameData = await internalGetGameInfo(rid);
     if (gameData == false) return null;
@@ -96,22 +91,26 @@ export const internalUpdateReadyStatus = async (sid, status) => {
     return true;
 };
 
-export const startGame = async (sid) => {
-    const uid = globalCache.get("uidOfSid/"+sid);
-    const rid = globalCache.get("ridOfSid/"+sid);
+export const internalStartGame = async (uid, rid) => {
     if (uid == null || rid == null) return null;
     const doc = await internalGetRoomInfo(rid);
     if (doc.owner != uid) return null;
-    const result = await internalUpdateAllReady(sid, 1);
+    const result = await internalCheckAllReady(1, rid);
     if (result == true) {
         const gameData = await internalGetGameInfo(rid);
         if (gameData == null) return null;
-        Object.assign(gameData.details, {
-            phase: 1,
-        });
         globalCache.set("gameDataPublic/"+rid, gameData);
     }
     return result;
+};
+
+export const internalCalcPoint = async (uid, rid, status, correctStreak, incorStreak, timeTaken) => {
+    const data = await internalGetRoomInfo(rid);
+    if (status) {
+        return ~~(700 * (0.5 + (Math.min(10, correctStreak)/10)*0.5 + (0.5 - timeTaken/(2000*data.tframe))) * (1.5 - data.diff));
+    } else {
+        return ~~(-200 * (0.5 + (Math.min(5, incorStreak)/5)*0.5) * (0.5 + data.diff));
+    }
 };
 
 export const getGameStatus = async (req, res) => {

@@ -36,7 +36,7 @@ npm start
 ### User module
 #### Route: `/user/get`
 
-Request (GET): Get details of an specific user. Return the data of that user.
+Request (POST): Get details of an specific user. Return the data of that user.
 - Requirement: Current user's uid
 - Body:
 ```
@@ -166,7 +166,7 @@ Response:
 ```
 #### Route `/room/get` 
 
-Request (GET): Get the data of the desired room. 
+Request (POST): Get the data of the desired room. 
 - Requirement: Room's id.
 - Body
 ```
@@ -195,7 +195,7 @@ Response:
 
 #### Route `/room/userlist` 
 
-Request (GET): Get the current user list and their details of the desired room.
+Request (POST): Get the current user list and their details of the desired room.
 - Requirement:
     - The room's id.
 - Body:
@@ -287,7 +287,7 @@ Response:
 - Note: You would need the Flask server running to be able to check for the answer.
 
 #### Route `/game/get`
-Request (GET): Get the current data of this game (of course not including other players "sensitive" data).
+Request (POST): Get the current data of this game (of course not including other players "sensitive" data).
 
 This should be (mostly) used whenever the user join in the first time, or when the user reconnect (to get the lost game data). The intended way to get the data in real-time is through listening to WS events.
 
@@ -453,7 +453,7 @@ true
 
 ### Shop module
 #### Route `/shop` 
-Request (GET): Get all the items the shop currently have.
+Request (POST): Get all the items the shop currently have.
 - Requirement: None.
 - Body: None.
   
@@ -512,7 +512,7 @@ Response:
 ```
 ### Group module 
 #### Route `/group/get`
-Request (GET): Get the required group
+Request (POST): Get the required group
 - Requirement:
   - groupId
 - Body:
