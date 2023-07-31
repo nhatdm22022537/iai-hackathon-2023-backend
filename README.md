@@ -437,15 +437,21 @@ Note: You would need the Flask server running.
 Body:
 - Arg1: `<Question Number> (index start from 0)`
 - Arg2: `<User's answer> (index start from 0, i.e 0=A, 1=B, 2=C, 3=D)`
+- Arg3: `<User's stats> (includes hp, atk, def)` 
 
 Example (Fifth question, chose A):
 ```
 4
 0
+{
+    "hp": 20,
+    "def": 15,
+    "atk": 4
+}
 ```
 
 #### Event `get-answer`
-Get the server's verdict of the user's answer.
+The server's verdict of the user's answer.
 
 Note: You would need the Flask server running.
 
@@ -458,6 +464,43 @@ Example (Fifth question, user was correct):
 4
 true
 ```
+
+#### Event `get-playerData`
+Notify when the data of a user is changed.
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<Correct streak>`
+- Arg3: `<Number of correct answers>`
+- Arg4: `<Points>`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+5
+7
+1707
+```
+
+#### Event `get-end`
+Notify when a user ended the game.
+
+Note: Gems will be added automatically after the game. Data of that player in the game will also be saved.
+
+Body:
+- Arg1: `<User's id>`
+- Arg2: `<Rewarded gems>`
+
+Example:
+```
+QdAErfCdDOZl4sgDe3e0vlxPUWn1
+27
+```
+
+#### Event `post-end`
+Declare that this user ended the game.
+
+Body: None.
 
 ### Shop module
 #### Route `/shop` 

@@ -19,6 +19,7 @@ io.on("connection", (socket) => {
     let points = 0;
     let correctStreak = 0;
     let incorStreak = 0;
+    let corCnt = 0;
     let timestamp = 0;
     let busy = false;
     console.info(`[id=${socket.id}] Client connected`);
@@ -86,14 +87,15 @@ io.on("connection", (socket) => {
         timestamp = Date.now();
     });
 
-    socket.on("post-answer", (noQues, ans) => {
+    socket.on("post-answer", (noQues, ans, playerStats) => {
         gameCtrl.internalCheckAns(noQues, ans, uid, rid).then(async (status) => {
             socket.emit("get-answer", noQues, status);
             const timeTaken = Date.now() - timestamp;
-            const delta = await gameCtrl.internalCalcPoint(uid, rid, status, correctStreak, incorStreak, timeTaken);
+            const delta = await gameCtrl.internalCalcPoint(uid, rid, status, correctStreak, incorStreak, timeTaken, playerStats);
             logInfo(`Question ${noQues}, chose ${ans} in ${timeTaken}ms, ${status ? "" : "in"}correct, ${delta} points`);
             points += delta;
             if (status) {
+                corCnt += 1;
                 correctStreak += 1;
                 incorStreak = 0;
             } else {
@@ -101,9 +103,17 @@ io.on("connection", (socket) => {
                 correctStreak = 0;
             }
             logInfo("Player info updated");
-            io.to(rid).emit("get-playerData", uid, correctStreak, points);
+            io.to(rid).emit("get-playerData", uid, correctStreak, corCnt, points);
             busy = false;
         });
+    });
+
+    socket.on("post-end", async () => {
+        const gems = await gameCtrl.internalCalcGem(rid, points);
+        logInfo(`Player completed the game, got ${gems} gems`);
+        io.to(rid).emit("get-end", uid, gems);
+        await gameCtrl.internalAfterGame(uid, rid, points, gems, corCnt);
+        busy = false;
     });
 
     socket.on("disconnect", () => {
@@ -115,9 +125,6 @@ io.on("connection", (socket) => {
         socket.disconnect(true);
         busy = false;
     });
-
-    // when entire room is done
-    // io.to(rid).disconnectSockets();
 });
 
 export const sendMessage = (roomId, key, message) => {
