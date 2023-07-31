@@ -2,7 +2,7 @@ import {Database, Firestore} from "../config/firebaseInit";
 import {Group} from "../models/Group";
 import {b56gen} from "../utils";
 import {internalGetUserInfo} from "./userController";
-import {internalUpdateCacheListRoom} from "./roomController";
+import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
 import {Room} from "../models/Room";
 require("dotenv").config();
 

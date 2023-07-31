@@ -1,4 +1,5 @@
 export class Group {
+    overallRanking = [];
     constructor(groupId, ownerId, name, description, members, rooms, courses) {
         // info
         this.groupId = groupId;
@@ -10,7 +11,6 @@ export class Group {
         this.members = members;
         this.rooms = rooms;
         this.courses = courses;
-        this.pending = [];
     }
 
     // getters
@@ -40,10 +40,6 @@ export class Group {
     }
     addCourse(course) {
         this.courses[course.name] = course;
-    }
-
-    addPending(member) {
-        this.pending.add(member.id);
     }
 }
 

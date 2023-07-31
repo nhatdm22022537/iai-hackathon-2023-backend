@@ -1,3 +1,11 @@
+/*
+    Item: The fundamental objects which users can possess
+    Item's property:
+    - id: This act as item's identifier, and it's unique
+    - type: For now there is only 1 type: "skin"
+    - cost: Cost, obviously
+    - description: Item's description
+*/
 
 export class Item {
     constructor(name, type, cost, description) {
