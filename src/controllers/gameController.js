@@ -1,5 +1,7 @@
 import {globalCache} from "../server";
 import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
+import {internalUpdateUserBalance} from "./possessionController";
+import {Database, ServerValue} from "../config/firebaseInit";
 const axios = require("axios");
 require("dotenv").config();
 
@@ -105,13 +107,39 @@ export const internalStartGame = async (uid, rid) => {
     return result;
 };
 
-export const internalCalcPoint = async (uid, rid, status, correctStreak, incorStreak, timeTaken) => {
+export const internalCalcPoint = async (uid, rid, status, corStreak, incorStreak, timeTaken, pStats) => {
     const data = await internalGetRoomInfo(rid);
-    if (status) {
-        return ~~(700 * (0.5 + (Math.min(10, correctStreak)/10)*0.5 + (0.5 - timeTaken/(2000*data.tframe))) * (1.5 - data.diff));
-    } else {
-        return ~~(-200 * (0.5 + (Math.min(5, incorStreak)/5)*0.5) * (0.5 + data.diff));
+    let scP = 1;
+    let scE = 1;
+    if (pStats.hp == 1) {
+        scP = 0.6;
+        scE = 1.5;
     }
+    if (status) {
+        return ~~((500 + 40*pStats.atk) * (0.5 + (Math.min(10, corStreak)/10)*0.3 + (1-(timeTaken/(1000*data.tframe)))*0.7) * (0.7 + data.diff) * scP);
+    } else {
+        return ~~(-150 * (0.5 + (Math.min(5, incorStreak)/5)*0.5) * (0.8 + data.diff) * (1+(20-pStats.def)/20) * scE);
+    }
+};
+
+export const internalCalcGem = async (rid, points) => {
+    const data = await internalGetRoomInfo(rid);
+    return ~~(Math.max(points/100, 0) * (0.8+data.diff*2));
+};
+
+export const internalAfterGame = async (uid, rid, points, gems, corCnt) => {
+    await internalUpdateUserBalance(uid, "deposit", gems);
+    return new Promise((resolve) => {
+        Database.ref(`rooms_data/${rid}/userPart/${uid}`).update({
+            points,
+            gems,
+            corCnt,
+            ts: ServerValue.TIMESTAMP,
+        }, (error) => {
+            resolve((error ? true : false));
+            return;
+        });
+    });
 };
 
 export const getGameStatus = async (req, res) => {
