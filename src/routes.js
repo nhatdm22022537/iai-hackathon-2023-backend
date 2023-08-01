@@ -1,3 +1,6 @@
+import {internalAfterGame} from "./controllers/gameController";
+import {groupUpdateOverall, internalGroupUpdateOverall} from "./controllers/groupController";
+
 const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
@@ -70,9 +73,13 @@ export const initWebRoutes = (app) => {
     app.route("/group/rooms/add")
         .post(groupCtrl.groupAddExistingRoom);
 
+    app.route("/group/ranking")
+        .post(groupCtrl.groupGetRanking);
+
     app.route("/object/get")
         .post(objCtrl.getObject);
 
     app.route("/object/post")
         .post(objCtrl.postObject);
+
 };
