@@ -51,6 +51,8 @@ io.on("connection", (socket) => {
 
     const allReady = async (event) => {
         busy = true;
+        if (event == "post-startQues" || event == "post-answer") return null;
+
         // im busy chotto matte
         let retries = 200; // wait for 10s, thats it
         while (busy && retries > 0) {
@@ -64,19 +66,25 @@ io.on("connection", (socket) => {
                     logInfo("Game start phase 2", true);
                     io.to(rid).emit("get-start", 2);
                     globalCache.del("listenForAllReady/"+rid);
+                    globalCache.set("listenForAllEnded/"+rid, true);
                 }
             });
         }
-        gameCtrl.internalCheckAllEnded(rid).then((status) => {
-            if (status) {
-                logInfo("All players ended", true);
-                Firestore.collection("rooms").doc(rid).update({
-                    "ended": true,
-                });
-                groupCtrl.internalGroupUpdateOverall(rid);
-                socket.offAny(allReady);
-            }
-        });
+
+        const listenForAllEnded = globalCache.get("listenForAllEnded/"+rid);
+        if (listenForAllEnded) {
+            gameCtrl.internalCheckAllEnded(rid).then((status) => {
+                if (status) {
+                    logInfo("All players ended", true);
+                    Firestore.collection("rooms").doc(rid).update({
+                        "ended": true,
+                    });
+                    groupCtrl.internalGroupUpdateOverall(rid);
+                    globalCache.del("listenForAllEnded/"+rid);
+                    socket.offAny(allReady);
+                }
+            });
+        }
     };
 
     socket.onAny(allReady);
