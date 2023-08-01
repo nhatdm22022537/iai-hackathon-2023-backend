@@ -151,6 +151,7 @@ export const groupAddExistingRoom = async (req, res) => {
         return res.json({msg: "err no such room", data: null});
     }
     await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status: "ok"});
+    await Database.ref(`rooms_data/${roomId}/group_list`).child(groupId).set({status: 1});
     return res.json({msg: "ok added room", data: roomId});
 };
 
@@ -167,16 +168,13 @@ export const internalGroupUpdatePlayer = async (groupId, userId, points) => {
     });
 };
 
-export const internalGroupUpdateOverall = async (groupId, lastRoomId) => {
-    const group = await internalGetGroup(groupId);
-    if (group == null) {
-        return console.log({msg: "err invalid group", data: null});
-    }
-    const data = await Database.ref(`rooms_data/${lastRoomId}/userPart`).get();
-    if (!data.exists()) {
+export const internalGroupUpdateOverall = async (lastRoomId) => {
+    const userData = await Database.ref(`rooms_data/${lastRoomId}/userPart`).get();
+    const groupData = await Database.ref(`rooms_data/${lastRoomId}/group_list`).get();
+    if (!userData.exists()) {
         return console.log({msg: "err invalid room", data: null});
     }
-    const lastRoomPlayer = data.val();
+    const lastRoomPlayer = userData.val();
     const updData = {};
     for (const player in lastRoomPlayer) {
         if (lastRoomPlayer[player].mode === 1) {
@@ -184,7 +182,10 @@ export const internalGroupUpdateOverall = async (groupId, lastRoomId) => {
             updData[player] = {role: "member", overall: ServerValue.increment(points)};
         }
     }
-    Database.ref(`groups/${groupId}/members`).update(updData);
+    const groupList = groupData.val();
+    for (const groupId in groupList) {
+        Database.ref(`groups/${groupId}/members`).update(updData);
+    }
     return console.log({msg: "ok updated points"});
 };
 
