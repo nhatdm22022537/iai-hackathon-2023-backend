@@ -62,6 +62,7 @@ export const internalCreateRoom = async (uid, data) => {
             "tframe": data.tframe || 30, // Maximum time allowed to answer a question (integer - second)
             "testid": data.testid || "", // Id of the test (saved in Flask) (string)
             "qnum": data.qnum || 0, // Number of question (integer)
+            "ended": false,
         })
             .catch((error) => {
                 reject(error);

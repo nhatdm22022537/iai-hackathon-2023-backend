@@ -16,6 +16,7 @@ export const internalGetGameInfo = async (rid) => {
             [e.user.uid]: {
                 online: false,
                 ready: (e.data.mode == 9 ? 9 : 0),
+                ended: false,
             },
         });
     });
@@ -63,6 +64,17 @@ export const internalCheckAllReady = async (status, rid) => {
     return true;
 };
 
+export const internalCheckAllEnded = async (rid) => {
+    if (rid == null) return null;
+    const gameData = await internalGetGameInfo(rid);
+    if (gameData == false) return null;
+    // eslint-disable-next-line no-unused-vars
+    for (const [key, value] of Object.entries(gameData.players)) {
+        if (value.online == true && (value.ready < 2 || value.ended == false)) return false;
+    }
+    return true;
+};
+
 export const internalUpdateOnlineStatus = async (status, uid, rid) => {
     if (uid == null || rid == null) return null;
     const gameData = await internalGetGameInfo(rid);
@@ -72,6 +84,7 @@ export const internalUpdateOnlineStatus = async (status, uid, rid) => {
             [uid]: {
                 online: status,
                 ready: 0,
+                ended: false,
             },
         });
     } else {
@@ -145,6 +158,14 @@ export const internalAfterGame = async (uid, rid, points, gems, corCnt) => {
         });
     });
 };
+
+export const internalCheckOwner = async (uid, rid) => {
+    if (uid == null || rid == null) return false;
+    const doc = await internalGetRoomInfo(rid);
+    if (doc.owner != uid) return false;
+    return true;
+};
+
 
 export const getGameStatus = async (req, res) => {
     const uid = req.body.uid;
