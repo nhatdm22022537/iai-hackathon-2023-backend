@@ -646,7 +646,8 @@ Response:
 Request (POST): Add a new room into the group
 - Requirement:
   - user's id
-  - group data
+  - group id
+  - room data
 - Body:
 ```
 {
@@ -668,5 +669,60 @@ Response:
 {
     "msg": "ok added new room",
     "data": "5v6hrh"
+}
+```
+
+#### Route `group/rooms/add`
+Request (POST): Add an existing room into the group
+- Requirement:
+  - user's id
+  - group id
+  - room's id
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "groupId": "tk6YtR",
+        "roomId": "iSe9VR"
+    }
+}
+```
+Response: 
+```
+{
+    "msg": "ok added room",
+    "data": "iSe9VR"
+}
+```
+#### Route `group/ranking`
+Request(POST): Get the group's ranking
+- Requirement:
+  - Group's id
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "groupId": "tk6YtR"
+    }
+}
+```
+Response:
+```
+{
+    "msg": "ok ranking",
+    "data": [
+        {
+            "rank": 1,
+            "name": "kanaluvu",
+            "overallEvaluation": 100
+        },
+        {
+            "rank": 2,
+            "name": "ball08",
+            "overallEvaluation": 68
+        }
+    ]
 }
 ```

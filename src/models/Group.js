@@ -1,4 +1,5 @@
 export class Group {
+
     constructor(groupId, ownerId, name, description, members, rooms, courses) {
         // info
         this.groupId = groupId;
@@ -7,10 +8,10 @@ export class Group {
         this.description = description;
 
         // property
-        this.members = members;
-        this.rooms = rooms;
-        this.courses = courses;
-        this.pending = [];
+        this.members = members || {};
+        this.rooms = rooms || {};
+        this.courses = courses || {};
+        this.overallRanking = []
     }
 
     // getters
@@ -42,8 +43,16 @@ export class Group {
         this.courses[course.name] = course;
     }
 
-    addPending(member) {
-        this.pending.add(member.id);
+    updateOverall() {
+        this.overallRanking.sort((memberA, memberB) => {
+            if (memberA.overallEvaluation > memberB.overallEvaluation) {
+                return 1;
+            } else if (memberA.overallEvaluation < memberB.overallEvaluation) {
+                return -1;
+            } else {
+                return 0;
+            }
+        })
     }
 }
 

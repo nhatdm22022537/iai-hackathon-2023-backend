@@ -70,9 +70,13 @@ export const initWebRoutes = (app) => {
     app.route("/group/rooms/add")
         .post(groupCtrl.groupAddExistingRoom);
 
+    app.route("/group/ranking")
+        .post(groupCtrl.groupGetRanking);
+
     app.route("/object/get")
         .post(objCtrl.getObject);
 
     app.route("/object/post")
         .post(objCtrl.postObject);
+
 };

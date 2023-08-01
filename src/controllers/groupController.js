@@ -1,9 +1,12 @@
-import {Database, Firestore} from "../config/firebaseInit";
+import {Database, Firestore, ServerValue} from "../config/firebaseInit";
 import {Group} from "../models/Group";
 import {b56gen} from "../utils";
 import {internalGetUserInfo} from "./userController";
-import {internalUpdateCacheListRoom} from "./roomController";
+import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
 import {Room} from "../models/Room";
+import {overlappingPlugins} from "@babel/preset-env/lib/plugins-compat-data";
+import {GroupMember} from "../models/GroupMember";
+
 require("dotenv").config();
 
 const internalGetGroup = async (groupId) => {
@@ -128,9 +131,12 @@ export const groupAddMember = async (req, res) => {
     const group = await internalGetGroup(groupId);
     const user = await internalGetUserInfo(memberId);
     if (group == null || user == null) {
-        return (group == null) ? res.json({msg: "err invalid group", data: null}) : res.json({msg: "err invalid user", data: null});
+        return (group == null) ? res.json({msg: "err invalid group", data: null}) : res.json({
+            msg: "err invalid user",
+            data: null
+        });
     }
-    await Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member"});
+    await Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member", overall: 0});
     return res.json({msg: "ok added member", data: memberId});
 };
 const internalCreateRoom = async (uid, data) => {
@@ -159,7 +165,7 @@ const internalCreateRoom = async (uid, data) => {
             return console.log({"msg": `err ${error}`, "data": null});
         });
 
-    Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
+    Database.ref("rooms_data/" + rid + "/userPart").child(uid).set({
         "mode": 9,
     }).then(
         () => {
@@ -205,7 +211,77 @@ export const groupAddExistingRoom = async (req, res) => {
     if (room == null) {
         return res.json({msg: "err no such room", data: null});
     }
-    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status:"ok"});
+    await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status: "ok"});
     return res.json({msg: "ok added room", data: roomId});
 
 };
+
+export const internalGroupUpdateOverall = async (groupId, lastRoomId) => {
+    const group = await internalGetGroup(groupId);
+    if (group == null) {
+        return console.log({msg: "err invalid group", data: null});
+    }
+    const lastRoomInfo = await internalGetRoomInfo(lastRoomId);
+    if (lastRoomInfo == null) {
+        return console.log({msg: "err invalid group", data: null});
+    }
+    const diff = lastRoomInfo.diff;
+    const lastRoomPlayer = (await Database.ref(`rooms_data/${lastRoomId}/userPart`)
+        .get()).val();
+
+    for (const player in lastRoomPlayer) {
+        if (lastRoomPlayer[player].mode === 1) {
+            const points = lastRoomPlayer[player].points;
+            Database.ref(`groups/${groupId}/members`).child(player)
+                .update({overall: ServerValue.increment(points)});
+        }
+    }
+    return console.log({msg: "ok updated points"});
+}
+
+export const groupGetRanking = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == "" || uid == null) {
+        return res.json({msg: 'err invalid uid', data: null})
+    }
+    const groupId = data.groupId;
+    const group = await internalGetGroup(groupId);
+    if (group == null) {
+        return res.json({msg: "err invalid group", data: null});
+    }
+    const membersList = (await Database.ref(`groups/${groupId}/members`).get()).val();
+    let currentRanking = [];
+    for (const member in membersList) {
+        if (membersList[member].role === 'member') {
+            let memberInfo = await internalGetUserInfo(member);
+            currentRanking.push(new GroupMember(member, memberInfo.uname, membersList[member].overall));
+        }
+    }
+    currentRanking.sort((memA, memB) => {
+        if (memA.overallEvaluation > memB.overallEvaluation) {
+            return -1;
+        } else if (memA.overallEvaluation < memB.overallEvaluation) {
+            return 1;
+        } else {
+            if (memA.name > memB.name) {
+                return 1;
+            } else if (memA.name < memB.name) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    });
+
+    let rank = 1;
+    let ranking = currentRanking.map((member) => {
+        return {
+            rank: rank++,
+            uid: member.uid,
+            name: member.name,
+            overallEvaluation: member.overallEvaluation
+        }
+    })
+    return res.json({msg: "ok ranking", data: ranking});
+}

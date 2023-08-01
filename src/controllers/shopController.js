@@ -1,11 +1,3 @@
-/*
-    Item: The fundamental objects which users can possess
-    Item's property:
-    - id: This act as item's identifier, and it's unique
-    - type: For now there is only 1 type: "skin"
-    - cost: Cost, obviously
-    - description: Item's description
-*/
 import {Firestore} from "../config/firebaseInit";
 import {addItemToUser, internalUpdateUserBalance} from "./possessionController";
 import {Item} from "../models/Item";
