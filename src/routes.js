@@ -1,6 +1,3 @@
-import {internalAfterGame} from "./controllers/gameController";
-import {groupUpdateOverall, internalGroupUpdateOverall} from "./controllers/groupController";
-
 const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
