@@ -78,5 +78,4 @@ export const initWebRoutes = (app) => {
 
     app.route("/object/post")
         .post(objCtrl.postObject);
-
 };

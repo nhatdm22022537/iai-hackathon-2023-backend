@@ -11,7 +11,7 @@ export class Buff {
             id: this.id,
             name: this.name,
             description: this.description,
-            effects: this.effects
-        }
+            effects: this.effects,
+        };
     }
 }

@@ -45,43 +45,53 @@ export const internalGetRoomInfo = async (rid) => {
     return doc.data();
 };
 
-export const createRoom = async (req, res) => {
-    const uid = req.body.uid;
-    const data = req.body.data;
-    if (uid == null || uid == "" || data == null) {
-        return res.json({"msg": "err Data not vaild", "data": null});
-    }
+export const internalCreateRoom = async (uid, data) => {
     let ok = false;
     const rid = b56gen(process.env.ROOM_ID_LENGTH || 6);
     while (!ok) {
         const tmpDoc = await Firestore.collection("rooms").doc(rid).get();
         if (!tmpDoc.exists) ok = true;
     }
-    Firestore.collection("rooms").doc(rid).set({
-        "rid": rid, // Room's id (string)
-        "owner": uid, // Owner of the room (creator) (string)
-        "name": data.name || "", // Name of the room (string)
-        "desc": data.desc || "", // Description of the room (string)
-        "diff": data.diff || 0.0, // Difficulty of the game (float - [0 to 1])
-        "tframe": data.tframe || 30, // Maximum time allowed to answer a question (integer - second)
-        "testid": data.testid || "", // Id of the test (saved in Flask) (string)
-        "qnum": data.qnum || 0, // Number of question (integer)
-    })
-        .then(() => {
-
+    return new Promise((resolve, reject) => {
+        Firestore.collection("rooms").doc(rid).set({
+            "rid": rid, // Room's id (string)
+            "owner": uid, // Owner of the room (creator) (string)
+            "name": data.name || "", // Name of the room (string)
+            "desc": data.desc || "", // Description of the room (string)
+            "diff": data.diff || 0.0, // Difficulty of the game (float - [0 to 1])
+            "tframe": data.tframe || 30, // Maximum time allowed to answer a question (integer - second)
+            "testid": data.testid || "", // Id of the test (saved in Flask) (string)
+            "qnum": data.qnum || 0, // Number of question (integer)
         })
-        .catch((error) => {
-            return res.json({"msg": "err "+error, "data": null});
+            .catch((error) => {
+                reject(error);
+                return;
+            });
+        Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
+            "mode": 9,
+        }, async (error) => {
+            if (error) {
+                reject(error);
+                return;
+            } else {
+                await internalUpdateCacheListRoom(rid);
+                resolve(rid);
+                return;
+            }
         });
-    Database.ref("rooms_data/"+rid+"/userPart").child(uid).set({
-        "mode": 9,
-    }, (error) => {
-        if (error) {
-            return res.json({"msg": "err "+error, "data": null});
-        } else {
-            internalUpdateCacheListRoom(rid);
-            return res.json({"msg": "ok", "data": rid});
-        }
+    });
+};
+
+export const createRoom = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == null || uid == "" || data == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    internalCreateRoom(uid, data).then((rid) => {
+        return res.json({"msg": "ok", "data": rid});
+    }).catch((error) => {
+        return res.json({"msg": "err "+ error, "data": null});
     });
 };
 

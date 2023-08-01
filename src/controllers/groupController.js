@@ -2,9 +2,7 @@ import {Database, Firestore, ServerValue} from "../config/firebaseInit";
 import {Group} from "../models/Group";
 import {b56gen} from "../utils";
 import {internalGetUserInfo} from "./userController";
-import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
-import {Room} from "../models/Room";
-import {overlappingPlugins} from "@babel/preset-env/lib/plugins-compat-data";
+import {internalGetRoomInfo, internalCreateRoom} from "./roomController";
 import {GroupMember} from "../models/GroupMember";
 
 require("dotenv").config();
@@ -20,32 +18,6 @@ const internalGetGroup = async (groupId) => {
         return null;
     } else {
         return groupData.data();
-    }
-};
-const internalGetMembers = async (groupId) => {
-    const groupData = await internalGetGroup(groupId);
-    if (groupData === null) {
-        return null;
-    } else {
-        return groupData.members;
-    }
-};
-
-const internalGetRooms = async (groupId) => {
-    const groupData = await internalGetGroup(groupId);
-    if (groupData === null) {
-        return null;
-    } else {
-        return groupData.rooms;
-    }
-};
-
-const internalGetCourses = async (groupId) => {
-    const groupData = await internalGetGroup(groupId);
-    if (groupData === null) {
-        return null;
-    } else {
-        return groupData.courses;
     }
 };
 
@@ -103,6 +75,7 @@ export const createGroup = async (req, res) => {
         return res.json({msg: `err ${error}`, data: null});
     });
 };
+
 export const deleteGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
@@ -120,6 +93,7 @@ export const deleteGroup = async (req, res) => {
     Database.ref("groups").child(groupId).remove();
     return res.json({msg: "ok"});
 };
+
 export const groupAddMember = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
@@ -133,48 +107,13 @@ export const groupAddMember = async (req, res) => {
     if (group == null || user == null) {
         return (group == null) ? res.json({msg: "err invalid group", data: null}) : res.json({
             msg: "err invalid user",
-            data: null
+            data: null,
         });
     }
     await Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member", overall: 0});
     return res.json({msg: "ok added member", data: memberId});
 };
-const internalCreateRoom = async (uid, data) => {
-    if (uid == null || uid == "") {
-        return null;
-    }
-    let ok = false;
-    const rid = b56gen(process.env.ROOM_ID_LENGTH || 6);
-    while (!ok) {
-        const tmpDoc = await Firestore.collection("rooms")
-            .doc(rid)
-            .get();
-        if (!tmpDoc.exists) ok = true;
-    }
-    const newRoom = new Room(rid,
-        uid,
-        data.name || "",
-        data.desc || "",
-        data.diff || "",
-        data.testId || 0,
-        data.qNum || 0,
-    );
-    Firestore.collection("rooms").doc(rid)
-        .set(newRoom.toJSON())
-        .catch((error) => {
-            return console.log({"msg": `err ${error}`, "data": null});
-        });
 
-    Database.ref("rooms_data/" + rid + "/userPart").child(uid).set({
-        "mode": 9,
-    }).then(
-        () => {
-            internalUpdateCacheListRoom(rid);
-        },
-        (error) => (console.log(error)),
-    );
-    return rid;
-};
 export const groupAddNewRoom = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
@@ -197,7 +136,7 @@ export const groupAddExistingRoom = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: 'err invalid uid', data: null})
+        return res.json({msg: "err invalid uid", data: null});
     }
     const groupId = data.groupId;
     const roomId = data.roomId;
@@ -213,7 +152,19 @@ export const groupAddExistingRoom = async (req, res) => {
     }
     await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status: "ok"});
     return res.json({msg: "ok added room", data: roomId});
+};
 
+export const internalGroupUpdatePlayer = async (groupId, userId, points) => {
+    const group = await internalGetGroup(groupId);
+    if (group == null) {
+        return console.log({msg: "err invalid group", data: null});
+    }
+    return new Promise((resolve) => {
+        Database.ref(`groups/${groupId}/members/${userId}`).update({overall: ServerValue.increment(points)}, (error) => {
+            resolve((error ? false : true));
+            return;
+        });
+    });
 };
 
 export const internalGroupUpdateOverall = async (groupId, lastRoomId) => {
@@ -221,29 +172,27 @@ export const internalGroupUpdateOverall = async (groupId, lastRoomId) => {
     if (group == null) {
         return console.log({msg: "err invalid group", data: null});
     }
-    const lastRoomInfo = await internalGetRoomInfo(lastRoomId);
-    if (lastRoomInfo == null) {
-        return console.log({msg: "err invalid group", data: null});
+    const data = await Database.ref(`rooms_data/${lastRoomId}/userPart`).get();
+    if (!data.exists()) {
+        return console.log({msg: "err invalid room", data: null});
     }
-    const diff = lastRoomInfo.diff;
-    const lastRoomPlayer = (await Database.ref(`rooms_data/${lastRoomId}/userPart`)
-        .get()).val();
-
+    const lastRoomPlayer = data.val();
+    const updData = {};
     for (const player in lastRoomPlayer) {
         if (lastRoomPlayer[player].mode === 1) {
             const points = lastRoomPlayer[player].points;
-            Database.ref(`groups/${groupId}/members`).child(player)
-                .update({overall: ServerValue.increment(points)});
+            updData[player] = {role: "member", overall: ServerValue.increment(points)};
         }
     }
+    Database.ref(`groups/${groupId}/members`).update(updData);
     return console.log({msg: "ok updated points"});
-}
+};
 
 export const groupGetRanking = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == "" || uid == null) {
-        return res.json({msg: 'err invalid uid', data: null})
+        return res.json({msg: "err invalid uid", data: null});
     }
     const groupId = data.groupId;
     const group = await internalGetGroup(groupId);
@@ -251,11 +200,11 @@ export const groupGetRanking = async (req, res) => {
         return res.json({msg: "err invalid group", data: null});
     }
     const membersList = (await Database.ref(`groups/${groupId}/members`).get()).val();
-    let currentRanking = [];
+    const currentRanking = [];
     for (const member in membersList) {
-        if (membersList[member].role === 'member') {
-            let memberInfo = await internalGetUserInfo(member);
-            currentRanking.push(new GroupMember(member, memberInfo.uname, membersList[member].overall));
+        if (membersList[member].role === "member") {
+            const memberInfo = await internalGetUserInfo(member);
+            currentRanking.push(new GroupMember(member, memberInfo.uname, membersList[member].overall, memberInfo));
         }
     }
     currentRanking.sort((memA, memB) => {
@@ -275,13 +224,12 @@ export const groupGetRanking = async (req, res) => {
     });
 
     let rank = 1;
-    let ranking = currentRanking.map((member) => {
+    const ranking = currentRanking.map((member) => {
         return {
             rank: rank++,
-            uid: member.uid,
-            name: member.name,
-            overallEvaluation: member.overallEvaluation
-        }
-    })
+            memberData: member.data,
+            overallEvaluation: member.overallEvaluation,
+        };
+    });
     return res.json({msg: "ok ranking", data: ranking});
-}
+};

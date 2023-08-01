@@ -116,6 +116,12 @@ io.on("connection", (socket) => {
         busy = false;
     });
 
+    socket.on("post-stop", async () => {
+        logInfo("Owner-sama stopped the game");
+        // todo: update leaderboard, cleanup after game
+        busy = false;
+    });
+
     socket.on("disconnect", () => {
         gameCtrl.internalUpdateOnlineStatus(false, uid, rid);
         io.to(rid).emit("get-state", uid, false);

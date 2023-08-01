@@ -136,7 +136,11 @@ export const internalAfterGame = async (uid, rid, points, gems, corCnt) => {
             corCnt,
             ts: ServerValue.TIMESTAMP,
         }, (error) => {
-            resolve((error ? true : false));
+            if (error) {
+                resolve(false);
+                return;
+            }
+            resolve(true);
             return;
         });
     });

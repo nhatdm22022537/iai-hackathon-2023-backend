@@ -1,5 +1,4 @@
 export class Group {
-
     constructor(groupId, ownerId, name, description, members, rooms, courses) {
         // info
         this.groupId = groupId;
@@ -11,7 +10,7 @@ export class Group {
         this.members = members || {};
         this.rooms = rooms || {};
         this.courses = courses || {};
-        this.overallRanking = []
+        this.overallRanking = [];
     }
 
     // getters
@@ -52,7 +51,7 @@ export class Group {
             } else {
                 return 0;
             }
-        })
+        });
     }
 }
 

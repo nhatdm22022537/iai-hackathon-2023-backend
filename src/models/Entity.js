@@ -42,8 +42,8 @@ export class Entity {
             status: (this.alive) ? "alive" : "dead",
             hitPoints: this.hitPoints,
             damage: this.damage,
-            currentEffects : this.currentEffects
-        }
+            currentEffects: this.currentEffects,
+        };
     }
     get getEffects() {
         return this.currentEffects;
@@ -51,14 +51,14 @@ export class Entity {
     addBuff(buff) {
         const effects = buff.effects;
         effects.forEach((effect) => {
-            if (!this.currentEffects[effect.type]){
+            if (!this.currentEffects[effect.type]) {
                 this.currentEffects[effect.type] = [];
             }
             this.currentEffects[effect.type].push({
                 scalar: effect.scalar,
-                duration: effect.duration
-            })
-        })
+                duration: effect.duration,
+            });
+        });
     }
 
     /**
@@ -67,8 +67,7 @@ export class Entity {
      */
     calculateStats() {
         for (const effect in this.currentEffects) {
-            let instances = this.currentEffects[effect];
-            if (effect === 'atk-reinforce') {
+            if (effect === "atk-reinforce") {
                 this.BASE_ATTACK_SCALE = this.BASE_ATTACK_SCALE*effect.scalar;
             } else {
                 this.BASE_ATTACK_SCALE = this.BASE_HEALTH_SCALE*effect.scalar*effect.scalar;
@@ -76,5 +75,4 @@ export class Entity {
         }
         this.revaluate();
     }
-
 }

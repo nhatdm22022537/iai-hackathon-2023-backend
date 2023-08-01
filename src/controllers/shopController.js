@@ -48,7 +48,6 @@ export const buyItem = async (req, res) => {
         .get())
         .data();
 
-
     if (currentPossession.balance > itemData.cost) {
         const newItem = new Item(itemData.name, itemData.type, itemData.cost, itemData.description);
         await addItemToUser(uid, {item: item, itemInfo: newItem.toJSON()});
