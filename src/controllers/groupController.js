@@ -233,7 +233,7 @@ export const internalGroupUpdateOverall = async (groupId, lastRoomId) => {
         if (lastRoomPlayer[player].mode === 1) {
             const points = lastRoomPlayer[player].points;
             Database.ref(`groups/${groupId}/members`).child(player)
-                .update({overall: ServerValue.increment(points * diff)})
+                .update({overall: ServerValue.increment(points)});
         }
     }
     return console.log({msg: "ok updated points"});
@@ -278,6 +278,7 @@ export const groupGetRanking = async (req, res) => {
     let ranking = currentRanking.map((member) => {
         return {
             rank: rank++,
+            uid: member.uid,
             name: member.name,
             overallEvaluation: member.overallEvaluation
         }

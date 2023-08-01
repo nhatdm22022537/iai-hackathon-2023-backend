@@ -7,10 +7,10 @@ export class GroupMember extends User {
     }
 
     /**
-     * for now, we only care about the points which the user got after each game, and it's scalar (diff).
+     * for now, we only care about the points which the user got after each game.
      */
     updateOverallEvaluation(result) {
-            this.overallEvaluation += result.points * result.scalar;
+            this.overallEvaluation += result.points;
     }
     toJSON() {
         return {
