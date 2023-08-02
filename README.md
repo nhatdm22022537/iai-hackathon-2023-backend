@@ -632,6 +632,67 @@ Response:
 }
 ```
 
+#### Route `group/all/rooms`
+Request (POST): Get all the room in all the groups
+- Requirement:
+  - user's uid
+- Body:
+```
+{
+    "uid": "xd8dbmwQ0ES6Uy5iwFGPri1v0Cu2"
+}
+```
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        "ZSUvSf": {
+            "owner": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+            "qnum": 0,
+            "name": "",
+            "ended": false,
+            "diff": 0,
+            "testid": "",
+            "rid": "ZSUvSf",
+            "tframe": 30,
+            "desc": ""
+        },
+        "xVBmrK": {
+            "owner": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+            "qnum": 0,
+            "name": "",
+            "ended": false,
+            "diff": 0,
+            "testid": "",
+            "rid": "xVBmrK",
+            "tframe": 30,
+            "desc": ""
+        },
+        "hCNWab": {
+            "owner": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+            "qnum": 0,
+            "name": "hi",
+            "diff": 0,
+            "testid": "",
+            "rid": "hCNWab",
+            "tframe": 30,
+            "desc": "wtf"
+        },
+        "iSe9VR": {
+            "owner": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+            "qnum": 46,
+            "name": "pls work",
+            "diff": 0.2,
+            "testid": "49dd0826739d4cbfac772bbf3cbf2b00",
+            "rid": "iSe9VR",
+            "tframe": 30,
+            "desc": "vua ve nhi"
+        }
+    }
+}
+```
+
 #### Route `group/create`
 Request (POST): Create a new group
 - Requirement: 
