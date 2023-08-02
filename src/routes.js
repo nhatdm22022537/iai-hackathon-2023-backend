@@ -1,3 +1,5 @@
+import {internalGetGroupProperties} from "./controllers/groupController";
+
 const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
@@ -54,6 +56,9 @@ export const initWebRoutes = (app) => {
 
     app.route("/group")
         .post(groupCtrl.getGroup);
+
+    app.route("/group/properties")
+        .post(groupCtrl.getGroupProperties)
 
     app.route("/group/create")
         .post(groupCtrl.createGroup);
