@@ -10,7 +10,7 @@ const port = process.env.BACKEND_PORT || 5678;
 const ws_port = process.env.BACKEND_WS_PORT || 3456;
 export const io = new Server(ws_port, {
     cors: {
-        origin: ["http://localhost:"+port, "http://localhost:"+ws_port],
+        origin: ["http://localhost:"+port, "http://localhost:"+ws_port, process.env.FRONTEND_ORIGIN],
     },
 });
 console.log("I can satisfy everyone' need in real-time at port " + ws_port);
