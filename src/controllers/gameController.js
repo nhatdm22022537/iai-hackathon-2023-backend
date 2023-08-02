@@ -129,7 +129,7 @@ export const internalCalcPoint = async (uid, rid, status, corStreak, incorStreak
         scE = 1.5;
     }
     if (status) {
-        return ~~((500 + 40*pStats.atk) * (0.5 + (Math.min(10, corStreak)/10)*0.3 + (1-(timeTaken/(1000*data.tframe)))*0.7) * (0.7 + data.diff) * scP);
+        return ~~((450 + 30*pStats.atk) * (0.5 + (Math.min(10, corStreak)/10)*0.3 + (1-(timeTaken/(1000*data.tframe)))*0.7) * (0.7 + data.diff) * scP * (1+pStats.buff));
     } else {
         return ~~(-150 * (0.5 + (Math.min(5, incorStreak)/5)*0.5) * (0.8 + data.diff) * (1+(20-pStats.def)/20) * scE);
     }
@@ -166,6 +166,25 @@ export const internalCheckOwner = async (uid, rid) => {
     return true;
 };
 
+export const postGameContext = async (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.rid;
+    const data = req.body.data;
+    if (uid == null || uid == "" || rid == null || rid == "" || data == null) {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    globalCache.set(`gameContext/${rid}/${uid}`, data, 28800);
+    return res.json({"msg": "ok", "data": null});
+};
+
+export const getGameContext = async (req, res) => {
+    const uid = req.body.uid;
+    const rid = req.body.rid;
+    if (uid == null || uid == "" || rid == null || rid == "") {
+        return res.json({"msg": "err Data not vaild", "data": null});
+    }
+    return res.json({"msg": "ok", "data": globalCache.get(`gameContext/${rid}/${uid}`)});
+};
 
 export const getGameStatus = async (req, res) => {
     const uid = req.body.uid;

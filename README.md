@@ -194,6 +194,7 @@ Response:
         "rid": "5MAtq9",
         "desc": "kill me",
         "diff": 0.2,
+        "ended": false,
         "tframe": 25,
         "testid": "f3cb7dc5bcda46d7999d0daaacefb4d6"
         "qnum": 69,
@@ -295,11 +296,10 @@ Response:
 - Note: You would need the Flask server running to be able to check for the answer.
 
 #### Route `/game/get`
-Request (POST): Get the current data of this game (of course not including other players "sensitive" data).
+Request (POST): Get the current player status of this game (of course not including other players "sensitive" data).
 
 This should be (mostly) used whenever the user join in the first time, or when the user reconnect (to get the lost game data). The intended way to get the data in real-time is through listening to WS events.
 
-Note: The response is not entirely completed at the moment.
 - Requirement:
     - The room's id.
 - Body:
@@ -319,14 +319,70 @@ Response:
         "players": {
             "QdAErfCdDOZl4sgDe3e0vlxPUWn1": {
                 "online": false,
-                "ready": 0
+                "ready": 0,
+                "ended": false
             },
             "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3": {
                 "online": false,
-                "ready": 9
+                "ready": 9,
+                "ended": false
             }
         }
     }
+}
+```
+
+#### Route `/game/context/get`
+Request (POST): Get the current player context of this game (saved locally in the player's browser).
+
+This data is used by the front-end.
+
+This should be used whenever the user need to get the lost context.
+
+- Requirement:
+    - The room's id.
+- Body:
+```
+{
+    "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+    "data": "sEGg69"
+}
+```
+  
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        ...
+    }
+}
+```
+
+#### Route `/game/context/post`
+Request (POST): Post the current player context of this game (saved locally in the player's browser).
+
+This data is used by the front-end.
+
+This should be used to backup the game.
+
+- Requirement:
+    - The room's id.
+    - Data of that player.
+- Body:
+```
+{
+    "uid": "f2iEv5kKrtOua3bazpVFfW5t4hB2",
+    "rid": "sEGg69",
+    "data": ...
+}
+```
+  
+Response:
+```
+{
+    "msg": "ok",
+    "data": null
 }
 ```
 
@@ -437,7 +493,7 @@ Note: You would need the Flask server running.
 Body:
 - Arg1: `<Question Number> (index start from 0)`
 - Arg2: `<User's answer> (index start from 0, i.e 0=A, 1=B, 2=C, 3=D)`
-- Arg3: `<User's stats> (includes hp, atk, def)` 
+- Arg3: `<User's stats> (includes hp, atk, def, buff)` 
 
 Example (Fifth question, chose A):
 ```
@@ -446,7 +502,8 @@ Example (Fifth question, chose A):
 {
     "hp": 20,
     "def": 15,
-    "atk": 4
+    "atk": 4,
+    "buff": 0
 }
 ```
 
@@ -499,6 +556,18 @@ QdAErfCdDOZl4sgDe3e0vlxPUWn1
 
 #### Event `post-end`
 Declare that this user ended the game.
+
+Body: None.
+
+#### Event `get-stop`
+Notify when the owner (or the server) decided to stop the game immediately.
+
+Player when got this event will need to trigger the `post-end` event immediately.
+
+Body: None.
+
+#### Event `post-stop`
+Stop this current game, force all player to end the game. Can only be used by the owner (or the server).
 
 Body: None.
 

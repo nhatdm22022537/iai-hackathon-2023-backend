@@ -49,32 +49,34 @@ export const internalGetGroupProperties = async (groupId) => {
     }
 };
 export const internalGetGroupList = async (uid) => {
-    const groupsData =  (await Database.ref(`users_data/${uid}/groups`).get()).val();
+    const groupsData = (await Database.ref(`users_data/${uid}/groups`).get()).val();
     const groupList = [];
+    // eslint-disable-next-line guard-for-in
     for (const group in groupsData) {
         groupList.push(group);
     }
     return groupList;
-}
+};
 
 export const internalGetAllGroupRooms = async (groupIdList) => {
     const roomsData = {};
     for (const groupId of groupIdList) {
         const rooms = (await internalGetGroupProperties(groupId)).rooms;
+        // eslint-disable-next-line guard-for-in
         for (const roomId in rooms) {
             roomsData[roomId] = await internalGetRoomInfo(roomId);
         }
     }
     return roomsData;
-}
+};
 export const getALlGroupsRooms = async (req, res) => {
     const uid = req.body.uid;
     if (uid == "" || uid == null) {
         return res.json({msg: "err invalid uid", data: null});
     }
     const data = await internalGetAllGroupRooms(await internalGetGroupList(uid));
-    res.json({msg:"ok", data:data});
-}
+    res.json({msg: "ok", data: data});
+};
 export const getGroupProperties = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
@@ -88,7 +90,7 @@ export const getGroupProperties = async (req, res) => {
     } else {
         return res.json({msg: "err", data: null});
     }
-}
+};
 export const createGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;

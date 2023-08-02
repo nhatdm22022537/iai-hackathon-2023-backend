@@ -40,6 +40,12 @@ export const initWebRoutes = (app) => {
     app.route("/game/get")
         .post(gameCtrl.getGameStatus);
 
+    app.route("/game/context/get")
+        .post(gameCtrl.getGameContext);
+
+    app.route("/game/context/post")
+        .post(gameCtrl.postGameContext);
+
     app.route("/storage/get")
         .post(possessionCtrl.getUserPossession);
 
@@ -56,7 +62,7 @@ export const initWebRoutes = (app) => {
         .post(groupCtrl.getGroup);
 
     app.route("/group/properties")
-        .post(groupCtrl.getGroupProperties)
+        .post(groupCtrl.getGroupProperties);
 
     app.route("/group/create")
         .post(groupCtrl.createGroup);
@@ -84,5 +90,4 @@ export const initWebRoutes = (app) => {
 
     app.route("/object/post")
         .post(objCtrl.postObject);
-
 };
