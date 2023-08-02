@@ -1,6 +1,8 @@
 import {Server} from "socket.io";
 import {globalCache} from "./server";
+import {Firestore} from "./config/firebaseInit";
 const gameCtrl = require("./controllers/gameController");
+const groupCtrl = require("./controllers/groupController");
 
 require("dotenv").config();
 
@@ -49,6 +51,8 @@ io.on("connection", (socket) => {
 
     const allReady = async (event) => {
         busy = true;
+        if (event == "post-startQues" || event == "post-answer") return null;
+
         // im busy chotto matte
         let retries = 200; // wait for 10s, thats it
         while (busy && retries > 0) {
@@ -62,6 +66,21 @@ io.on("connection", (socket) => {
                     logInfo("Game start phase 2", true);
                     io.to(rid).emit("get-start", 2);
                     globalCache.del("listenForAllReady/"+rid);
+                    globalCache.set("listenForAllEnded/"+rid, true);
+                }
+            });
+        }
+
+        const listenForAllEnded = globalCache.get("listenForAllEnded/"+rid);
+        if (listenForAllEnded) {
+            gameCtrl.internalCheckAllEnded(rid).then((status) => {
+                if (status) {
+                    logInfo("All players ended", true);
+                    Firestore.collection("rooms").doc(rid).update({
+                        "ended": true,
+                    });
+                    groupCtrl.internalGroupUpdateOverall(rid);
+                    globalCache.del("listenForAllEnded/"+rid);
                     socket.offAny(allReady);
                 }
             });
@@ -108,6 +127,12 @@ io.on("connection", (socket) => {
         });
     });
 
+    const disconnectEntirely = () => {
+        socket._cleanup();
+        socket.removeAllListeners();
+        socket.disconnect(true);
+    };
+
     socket.on("post-end", async () => {
         const gems = await gameCtrl.internalCalcGem(rid, points);
         logInfo(`Player completed the game, got ${gems} gems`);
@@ -117,18 +142,20 @@ io.on("connection", (socket) => {
     });
 
     socket.on("post-stop", async () => {
-        logInfo("Owner-sama stopped the game");
-        // todo: update leaderboard, cleanup after game
-        busy = false;
+        gameCtrl.internalCheckOwner(uid, rid).then((status) => {
+            if (status) {
+                logInfo("Owner-sama stopped the game");
+                io.to(rid).emit("get-stop");
+            }
+            busy = false;
+        });
     });
 
     socket.on("disconnect", () => {
         gameCtrl.internalUpdateOnlineStatus(false, uid, rid);
         io.to(rid).emit("get-state", uid, false);
         logInfo("Disconnected");
-        socket._cleanup();
-        socket.removeAllListeners();
-        socket.disconnect(true);
+        disconnectEntirely();
         busy = false;
     });
 });

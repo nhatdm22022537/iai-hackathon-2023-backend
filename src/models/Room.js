@@ -18,6 +18,7 @@ export class Room {
             "tframe": this.tframe || 30, // Maximum time allowed to answer a question (integer - second)
             "testId": this.testId || "", // Id of the test saved locally (string)
             "qNum": this.questionNum || "", // Number of question (integer)
+            "ended": this.ended || false, // Is this room ended (boolean)
         };
     }
 }

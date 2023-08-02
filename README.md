@@ -715,13 +715,23 @@ Response:
     "data": [
         {
             "rank": 1,
-            "name": "kanaluvu",
-            "overallEvaluation": 100
+            "memberData": {
+                "uid": "xd8dbmwQ0ES6Uy5iwFGPri1v0Cu2",
+                "uname": "kanaluvu",
+                "priv": "0",
+                "email": "mail@gmail.com"
+            },
+            "overallEvaluation": 2100
         },
         {
             "rank": 2,
-            "name": "ball08",
-            "overallEvaluation": 68
+            "memberData": {
+                "uid": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+                "uname": "ball08",
+                "priv": "0",
+                "email": "maivannhatminh2005@gmail.com"
+            },
+            "overallEvaluation": 1428
         }
     ]
 }

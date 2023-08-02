@@ -211,6 +211,7 @@ export const internalGroupUpdateOverall = async (lastRoomId) => {
         }
     }
     const groupList = groupData.val();
+    // eslint-disable-next-line guard-for-in
     for (const groupId in groupList) {
         Database.ref(`groups/${groupId}/members`).update(updData);
     }
