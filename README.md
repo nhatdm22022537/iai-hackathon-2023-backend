@@ -588,6 +588,49 @@ Response:
     }
 }
 ```
+#### Route `group/properties`
+Request (POST): Get a group's properties (members, rooms, ...)
+- Requirement:
+  - user's uid
+  - group's id
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "groupId": "tk6YtR"
+    }
+}
+```
+Response:
+```
+{
+    "msg": "ok",
+    "data": {
+        "members": {
+            "QdAErfCdDOZl4sgDe3e0vlxPUWn1": {
+                "overall": 1428,
+                "role": "member"
+            },
+            "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3": {
+                "role": "owner"
+            },
+            "xd8dbmwQ0ES6Uy5iwFGPri1v0Cu2": {
+                "overall": 2100,
+                "role": "member"
+            }
+        },
+        "rooms": {
+            "hCNWab": {
+                "status": "ok"
+            },
+            "iSe9VR": {
+                "status": "ok"
+            }
+        }
+    }
+}
+```
 
 #### Route `group/create`
 Request (POST): Create a new group
