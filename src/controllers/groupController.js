@@ -2,7 +2,7 @@ import {Database, Firestore, ServerValue} from "../config/firebaseInit";
 import {Group} from "../models/Group";
 import {b56gen} from "../utils";
 import {internalGetUserInfo} from "./userController";
-import {internalGetRoomInfo, internalCreateRoom} from "./roomController";
+import {internalCreateRoom, internalGetRoomInfo} from "./roomController";
 import {GroupMember} from "../models/GroupMember";
 
 require("dotenv").config();
@@ -48,7 +48,33 @@ export const internalGetGroupProperties = async (groupId) => {
         return group;
     }
 };
+export const internalGetGroupList = async (uid) => {
+    const groupsData =  (await Database.ref(`users_data/${uid}/groups`).get()).val();
+    const groupList = [];
+    for (const group in groupsData) {
+        groupList.push(group);
+    }
+    return groupList;
+}
 
+export const internalGetAllGroupRooms = async (groupIdList) => {
+    const roomsData = {};
+    for (const groupId of groupIdList) {
+        const rooms = (await internalGetGroupProperties(groupId)).rooms;
+        for (const roomId in rooms) {
+            roomsData[roomId] = await internalGetRoomInfo(roomId);
+        }
+    }
+    return roomsData;
+}
+export const getALlGroupsRooms = async (req, res) => {
+    const uid = req.body.uid;
+    if (uid == "" || uid == null) {
+        return res.json({msg: "err invalid uid", data: null});
+    }
+    const data = await internalGetAllGroupRooms(await internalGetGroupList(uid));
+    res.json({msg:"ok", data:data});
+}
 export const getGroupProperties = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
@@ -97,7 +123,8 @@ export const createGroup = async (req, res) => {
         newGroup.infoToJSON(),
     ).then(() => {
         Database.ref(`groups/${groupId}/members`).child(uid).set({role: "owner"});
-        return res.json({msg: "ok group created", data: data.infoToJSON});
+        Database.ref(`users_data/${uid}/groups`).child(groupId).set({role: "owner"});
+        return res.json({msg: "ok group created", data: groupId});
     }, (error) => {
         return res.json({msg: `err ${error}`, data: null});
     });
@@ -137,7 +164,8 @@ export const groupAddMember = async (req, res) => {
             data: null,
         });
     }
-    await Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member", overall: 0});
+    Database.ref(`groups/${groupId}/members`).child(memberId).set({role: "member", overall: 0});
+    Database.ref(`users_data/${memberId}/groups`).child(groupId).set({role: "member"});
     return res.json({msg: "ok added member", data: memberId});
 };
 
