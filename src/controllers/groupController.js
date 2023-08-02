@@ -36,6 +36,33 @@ export const getGroup = async (req, res) => {
     }
 };
 
+export const internalGetGroupProperties = async (groupId) => {
+    if (groupId == null || groupId == "") {
+        return null;
+    }
+    const groupData = await Database.ref("groups").child(groupId).get();
+    const group = groupData.val();
+    if (!groupData.exists) {
+        return null;
+    } else {
+        return group;
+    }
+};
+
+export const getGroupProperties = async (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == "" || uid == null) {
+        return res.json({msg: "err invalid uid", data: null});
+    }
+    const groupId = data.groupId;
+    const properties = await internalGetGroupProperties(groupId);
+    if (properties) {
+        return res.json({msg: "ok", data: properties});
+    } else {
+        return res.json({msg: "err", data: null});
+    }
+}
 export const createGroup = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
@@ -129,6 +156,7 @@ export const groupAddNewRoom = async (req, res) => {
     }
     const roomId = await internalCreateRoom(uid, roomData);
     await Database.ref(`groups/${groupId}/rooms`).child(roomId).set({status: "ok"});
+    await Database.ref(`rooms_data/${roomId}/group_list`).child(groupId).set({status: 1});
     return res.json({msg: "ok added new room", data: roomId});
 };
 
