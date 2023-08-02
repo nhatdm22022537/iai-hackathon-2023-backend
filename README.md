@@ -726,3 +726,55 @@ Response:
     ]
 }
 ```
+
+### Storage module 
+#### Route `/storage/get`
+Request (POST): Get the user's balance and inventory
+- Requirement: 
+  - user's uid
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3"
+}
+```
+Response:
+```
+{
+    "data": {
+        "items": {
+            "hihi": {
+                "cost": 99999,
+                "name": "hihi",
+                "description": "blue eye's white dragonn",
+                "type": "skin"
+            }
+        },
+        "balance": 1234550
+    },
+    "msg": "ok"
+}
+```
+#### Route `/storage/update`
+Request (POST): Update user's balance (balance only because user's items will be updated from the server)
+- Requirement
+  - user's uid
+  - action: "set", "deposit", "withdraw"
+  - the new's balance("set") / the amount of changes("deposit","withdraw")
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "action": "set",
+        "amount": 1234550
+    }
+}
+```
+Response:
+```
+{
+    "msg": "ok",
+    "currentBalance": 1234550
+}
+```
