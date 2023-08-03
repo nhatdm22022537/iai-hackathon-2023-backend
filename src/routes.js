@@ -16,6 +16,9 @@ export const initWebRoutes = (app) => {
     app.route("/user/update")
         .post(userCtrl.setUserInfo);
 
+    app.route("/user/init")
+        .post(userCtrl.initRegisterUser);
+
     app.route("/room/create")
         .post(roomCtrl.createRoom);
 

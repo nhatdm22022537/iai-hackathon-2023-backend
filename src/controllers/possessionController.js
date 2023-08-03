@@ -24,10 +24,8 @@ export const setUserPossession = (uid, data) => {
     if (uid == null || uid == "") {
         return;
     }
-    const balance = data.balance;
-    const items = data.items;
     Firestore.collection("storage").doc(uid)
-        .set({balance: balance, items: items})
+        .set(data)
         .then(() => {
             console.log("possession set");
         })

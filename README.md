@@ -93,6 +93,33 @@ Response:
 }
 ```
 
+
+#### Route `/user/init`
+Request (POST): Initialize new user data.
+- Requirement:
+    - Current user's uid
+    - New data
+- Body:
+```
+{
+    "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+    "data": {
+        "uid": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
+        "priv": "0",
+        "email": "kna@gmail.com",
+        "uname": "knc"
+    }
+}
+```
+
+Response:
+```
+{
+    "msg": "ok",
+    "data": null
+}
+```
+
 ### Room module
 #### Route `/room/create`: 
 
