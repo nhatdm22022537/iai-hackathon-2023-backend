@@ -13,7 +13,7 @@ const internalGetUserPossession = async (uid) => {
 
 export const getUserPossession = async (req, res) => {
     const uid = req.body.uid;
-    if (uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
+    if (uid == null || uid == "") return res.json({"data": null, "msg": "err User not vaild"});
     const data = await internalGetUserPossession(uid);
     if (data) {
         return res.json({"data": data, "msg": "ok"});
@@ -21,6 +21,7 @@ export const getUserPossession = async (req, res) => {
         return res.json({"data": null, "msg": "err"});
     }
 };
+
 export const setUserPossession = (uid, data) => {
     if (uid == null || uid == "") {
         return;

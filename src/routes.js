@@ -2,7 +2,7 @@ const homeCtrl = require("./controllers/homeController");
 const userCtrl = require("./controllers/userController");
 const roomCtrl = require("./controllers/roomController");
 const gameCtrl = require("./controllers/gameController");
-const possessionCtrl = require("./controllers/possessionController");
+const possCtrl = require("./controllers/possessionController");
 const shopCtrl = require("./controllers/shopController");
 const groupCtrl = require("./controllers/groupController");
 const objCtrl = require("./controllers/frontEndObjectController");
@@ -50,10 +50,10 @@ export const initWebRoutes = (app) => {
         .post(gameCtrl.postGameContext);
 
     app.route("/storage/get")
-        .post(possessionCtrl.getUserPossession);
+        .post(possCtrl.getUserPossession);
 
     app.route("/storage/update")
-        .post(possessionCtrl.updateUserBalance);
+        .post(possCtrl.updateUserBalance);
 
     app.route("/shop")
         .post(shopCtrl.getShop);
