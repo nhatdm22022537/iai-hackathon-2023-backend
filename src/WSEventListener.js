@@ -150,11 +150,12 @@ io.on("connection", (socket) => {
         socket.disconnect(true);
     };
 
-    socket.on("post-end", async () => {
-        const gems = await gameCtrl.internalCalcGem(rid, points);
-        logInfo(`Player completed the game, got ${gems} gems`);
-        io.to(rid).emit("get-end", uid, gems);
-        await gameCtrl.internalAfterGame(uid, rid, points, gems, corCnt);
+    socket.on("post-end", async (gems) => {
+        const gemsP = await gameCtrl.internalCalcGem(rid, points);
+        const totalGem = gems + gemsP;
+        logInfo(`Player completed the game, got ${totalGem} gems (${gems} ingame, ${gemsP} points)`);
+        io.to(rid).emit("get-end", uid, totalGem);
+        await gameCtrl.internalAfterGame(uid, rid, points, totalGem, corCnt);
         busy = false;
     });
 

@@ -593,9 +593,15 @@ QdAErfCdDOZl4sgDe3e0vlxPUWn1
 ```
 
 #### Event `post-end`
-Declare that this user ended the game.
+Declare that this user ended the game. Also send some data (particularly gem count) to the server.
 
-Body: None.
+Body:
+- Arg1: `<Rewarded gems>`
+
+Example:
+```
+69
+```
 
 #### Event `get-stop`
 Notify when the owner (or the server) decided to stop the game immediately.
