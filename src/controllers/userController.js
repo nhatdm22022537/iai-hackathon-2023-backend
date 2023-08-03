@@ -1,5 +1,6 @@
 import {Firestore} from "../config/firebaseInit";
 import {globalCache} from "../server";
+import {setUserPossession} from "./possessionController";
 
 export const internalGetUserInfo = async (uid) => {
     const cached = globalCache.get("users/" + uid);
@@ -38,6 +39,21 @@ export const setUserInfo = (req, res) => {
     Firestore.collection("user_data").doc(uid).update(newUserInfo)
         .then(() => {
             globalCache.set("users/"+uid, newUserInfo);
+            return res.json({"msg": "ok", "data": null});
+        })
+        .catch((error) => {
+            return res.json({"msg": "err "+error, "data": null});
+        });
+};
+
+export const initRegisterUser = (req, res) => {
+    const uid = req.body.uid;
+    const data = req.body.data;
+    if (uid == null || uid == "" || data == null || data.uid != uid) return res.json({"msg": "err User not vaild", "data": null});
+    setUserPossession(uid, {balance: 100, items: {}});
+    Firestore.collection("user_data").doc(uid).update(data)
+        .then(() => {
+            globalCache.set("users/"+uid, data);
             return res.json({"msg": "ok", "data": null});
         })
         .catch((error) => {

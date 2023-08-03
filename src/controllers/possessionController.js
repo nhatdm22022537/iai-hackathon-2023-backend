@@ -1,6 +1,7 @@
 import {FieldValue, Firestore} from "../config/firebaseInit";
 
 const internalGetUserPossession = async (uid) => {
+    if (uid == null || uid == "") return null;
     const doc = await Firestore.collection("storage")
         .doc(uid).get();
     if (doc.exists) {
@@ -12,7 +13,7 @@ const internalGetUserPossession = async (uid) => {
 
 export const getUserPossession = async (req, res) => {
     const uid = req.body.uid;
-    if (uid == null || uid == "") res.json({"data": null, "msg": "err User not vaild"});
+    if (uid == null || uid == "") return res.json({"data": null, "msg": "err User not vaild"});
     const data = await internalGetUserPossession(uid);
     if (data) {
         return res.json({"data": data, "msg": "ok"});
@@ -20,14 +21,13 @@ export const getUserPossession = async (req, res) => {
         return res.json({"data": null, "msg": "err"});
     }
 };
+
 export const setUserPossession = (uid, data) => {
     if (uid == null || uid == "") {
         return;
     }
-    const balance = data.balance;
-    const items = data.items;
     Firestore.collection("storage").doc(uid)
-        .set({balance: balance, items: items})
+        .set(data)
         .then(() => {
             console.log("possession set");
         })
