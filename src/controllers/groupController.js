@@ -57,6 +57,24 @@ export const internalGetGroupList = async (uid) => {
     }
     return groupList;
 };
+export const getGroupInfoList = async (req, res) => {
+    const uid = req.body.uid;
+    if (uid == "" || uid == null) {
+        return res.json({msg: "err invalid uid", data: null});
+    }
+    const groupList = await internalGetGroupList(uid);
+    const groupInfoList = [];
+    for (const groupId of groupList) {
+        const groupInfo = {};
+        const groupDesc = await internalGetGroup(groupId);
+        Object.assign(groupInfo, groupDesc);
+        const memberData = await Database.ref(`groups/${groupId}/members`).get();
+        const memberCount = Object.keys(memberData.val()).length;
+        Object.assign(groupInfo, {memberCount: memberCount});
+        groupInfoList.push(groupInfo)
+    }
+    return res.json({msg: "ok", groupInfoList: groupInfoList});
+};
 
 export const internalGetAllGroupRooms = async (groupIdList) => {
     const roomsData = {};

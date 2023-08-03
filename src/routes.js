@@ -85,6 +85,9 @@ export const initWebRoutes = (app) => {
     app.route("/group/ranking")
         .post(groupCtrl.groupGetRanking);
 
+    app.route("/group/all")
+        .post(groupCtrl.getGroupInfoList);
+
     app.route("/group/all/rooms")
         .post(groupCtrl.getALlGroupsRooms);
 
