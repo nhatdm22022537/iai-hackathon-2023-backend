@@ -100,9 +100,20 @@ export const internalUpdateReadyStatus = async (status, uid, rid) => {
     if (uid == null || rid == null) return null;
     const gameData = await internalGetGameInfo(rid);
     if (gameData == false) return null;
-    Object.assign(gameData.players[uid], {
-        ready: parseInt(status),
-    });
+    if (gameData.players[uid] == null) {
+        Object.assign(gameData.players, {
+            [uid]: {
+                online: true,
+                ready: parseInt(status),
+                ended: false,
+            },
+        });
+    } else {
+        Object.assign(gameData.players[uid], {
+            ready: parseInt(status),
+        });
+    }
+
     globalCache.set("gameDataPublic/"+rid, gameData);
     return true;
 };
