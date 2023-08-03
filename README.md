@@ -512,6 +512,17 @@ Post the request to start the game. Only the owner can post this request (others
 
 Body: None.
 
+#### Event `post-startQues`
+Post the request to start the question. The clock will be started.
+
+Body:
+- Arg1: `<Question Number> (index start from 0)`
+
+Example (Fifth question):
+```
+4
+```
+
 #### Event `post-answer`
 Post the user's answer of a specific question to the server.
 
@@ -811,10 +822,7 @@ Response:
 {
     "msg": "ok group created",
     "data": {
-        "groupId": "tk6YtR",
-        "ownerId": "hPnZoOJ5K3VPD9BWgo7KtxkuUBC3",
-        "name": "TeamOne",
-        "description": "20 mil"
+        "groupId": "tk6YtR"
     }
 }
 ```
