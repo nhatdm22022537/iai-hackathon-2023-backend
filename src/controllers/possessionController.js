@@ -1,6 +1,7 @@
 import {FieldValue, Firestore} from "../config/firebaseInit";
 
 const internalGetUserPossession = async (uid) => {
+    if (uid == null || uid == "") return null;
     const doc = await Firestore.collection("storage")
         .doc(uid).get();
     if (doc.exists) {
