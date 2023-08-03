@@ -744,8 +744,47 @@ Response:
     }
 }
 ```
+#### Route `/group/all`
+Request (POST): Get all the user's groups.
+- Requirement:
+  - user's uid
+- Body:
+```
+{
+    "uid": "QdAErfCdDOZl4sgDe3e0vlxPUWn1"
+}
+```
 
-#### Route `group/all/rooms`
+Response: 
+```
+{
+    "msg": "ok",
+    "groupInfoList": [
+        {
+            "groupId": "3R48xv",
+            "name": "Trò chơi vương quyền",
+            "description": 20,
+            "ownerId": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+            "memberCount": 1
+        },
+        {
+            "groupId": "kqwkWH",
+            "name": "Trò chơi Giải Tích I",
+            "description": 20,
+            "ownerId": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+            "memberCount": 1
+        },
+        {
+            "groupId": "yciGEk",
+            "name": "TeamFour",
+            "description": "0 mil",
+            "ownerId": "QdAErfCdDOZl4sgDe3e0vlxPUWn1",
+            "memberCount": 1
+        }
+    ]
+}
+```
+#### Route `/group/all/rooms`
 Request (POST): Get all the room in all the groups
 - Requirement:
   - user's uid
