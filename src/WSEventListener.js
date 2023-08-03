@@ -11,7 +11,11 @@ const ws_port = process.env.BACKEND_WS_PORT || 3456;
 const fr_origin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
 export const io = new Server(ws_port, {
     cors: {
-        origin: ["http://localhost:"+port, "http://localhost:"+ws_port, fr_origin],
+        origin: [
+            "http://localhost:" + port,
+            "http://localhost:" + ws_port,
+            fr_origin,
+        ],
     },
 });
 console.log("I can satisfy everyone' need in real-time at port " + ws_port);
@@ -60,28 +64,28 @@ io.on("connection", (socket) => {
             retries -= 1;
             await new Promise((resolve) => setTimeout(resolve, 50));
         }
-        const listenForAllReady = globalCache.get("listenForAllReady/"+rid);
+        const listenForAllReady = globalCache.get("listenForAllReady/" + rid);
         if (listenForAllReady) {
             gameCtrl.internalCheckAllReady(2, rid).then((status) => {
                 if (status) {
                     logInfo("Game start phase 2", true);
                     io.to(rid).emit("get-start", 2);
-                    globalCache.del("listenForAllReady/"+rid);
-                    globalCache.set("listenForAllEnded/"+rid, true);
+                    globalCache.del("listenForAllReady/" + rid);
+                    globalCache.set("listenForAllEnded/" + rid, true);
                 }
             });
         }
 
-        const listenForAllEnded = globalCache.get("listenForAllEnded/"+rid);
+        const listenForAllEnded = globalCache.get("listenForAllEnded/" + rid);
         if (listenForAllEnded) {
             gameCtrl.internalCheckAllEnded(rid).then((status) => {
                 if (status) {
                     logInfo("All players ended", true);
                     Firestore.collection("rooms").doc(rid).update({
-                        "ended": true,
+                        ended: true,
                     });
                     groupCtrl.internalGroupUpdateOverall(rid);
-                    globalCache.del("listenForAllEnded/"+rid);
+                    globalCache.del("listenForAllEnded/" + rid);
                     socket.offAny(allReady);
                 }
             });
@@ -96,7 +100,7 @@ io.on("connection", (socket) => {
                 logInfo("Game start phase 1", true);
                 io.to(rid).emit("get-start", 1);
                 await gameCtrl.internalGetCorrectAnswer(rid); // starting to fetch answer
-                globalCache.set("listenForAllReady/"+rid, true); // only listen when server fully loaded
+                globalCache.set("listenForAllReady/" + rid, true); // only listen when server fully loaded
             }
             busy = false;
         });
@@ -111,8 +115,20 @@ io.on("connection", (socket) => {
         gameCtrl.internalCheckAns(noQues, ans, uid, rid).then(async (status) => {
             socket.emit("get-answer", noQues, status);
             const timeTaken = Date.now() - timestamp;
-            const delta = await gameCtrl.internalCalcPoint(uid, rid, status, correctStreak, incorStreak, timeTaken, playerStats);
-            logInfo(`Question ${noQues}, chose ${ans} in ${timeTaken}ms, ${status ? "" : "in"}correct, ${delta} points`);
+            const delta = await gameCtrl.internalCalcPoint(
+                uid,
+                rid,
+                status,
+                correctStreak,
+                incorStreak,
+                timeTaken,
+                playerStats,
+            );
+            logInfo(
+                `Question ${noQues}, chose ${ans} in ${timeTaken}ms, ${
+                    status ? "" : "in"
+                }correct, ${delta} points`,
+            );
             points += delta;
             if (status) {
                 corCnt += 1;
@@ -170,4 +186,3 @@ export const sendMessage = (roomId, key, message) => {
         console.info(`WS sent to: ${roomId}/${key}: ${message}`);
     }
 };
-
