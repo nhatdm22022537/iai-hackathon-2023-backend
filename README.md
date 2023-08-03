@@ -675,7 +675,7 @@ Response:
 }
 ```
 ### Group module 
-#### Route `/group/get`
+#### Route `/group`
 Request (POST): Get the required group
 - Requirement:
   - groupId
