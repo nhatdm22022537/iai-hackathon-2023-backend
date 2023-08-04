@@ -1,14 +1,14 @@
-import {globalCache} from "../server";
-import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
-import {internalUpdateUserBalance} from "./possessionController";
-import {Database, ServerValue} from "../config/firebaseInit";
+import { globalCache } from "../server";
+import { internalGetRoomInfo, internalUpdateCacheListRoom } from "./roomController";
+import { internalUpdateUserBalance } from "./possessionController";
+import { Database, ServerValue } from "../config/firebaseInit";
 const axios = require("axios");
 require("dotenv").config();
 
 export const internalGetGameInfo = async (rid) => {
-    let gameData = globalCache.get("gameDataPublic/"+rid);
+    let gameData = globalCache.get("gameDataPublic/" + rid);
     if (gameData) return gameData;
-    gameData = {details: {}, players: {}};
+    gameData = { details: {}, players: {} };
     const arr = await internalUpdateCacheListRoom(rid);
     if (arr == null) return false;
     arr.forEach((e) => {
@@ -20,12 +20,12 @@ export const internalGetGameInfo = async (rid) => {
             },
         });
     });
-    globalCache.set("gameDataPublic/"+rid, gameData);
+    globalCache.set("gameDataPublic/" + rid, gameData);
     return gameData;
 };
 
 export const internalGetCorrectAnswer = async (rid) => {
-    const gameAns = globalCache.get("gameAnswer/"+rid);
+    const gameAns = globalCache.get("gameAnswer/" + rid);
     if (gameAns) return gameAns;
     const testId = (await internalGetRoomInfo(rid)).testid;
     return new Promise((resolve) => {
@@ -33,11 +33,12 @@ export const internalGetCorrectAnswer = async (rid) => {
             method: "get",
             maxBodyLength: Infinity,
             url: `http://127.0.0.1:${process.env.BACKEND_FLASK_PORT}/data/${testId}/answers`,
-            headers: { },
+            headers: {},
         };
         axios.request(config)
             .then((response) => {
-                globalCache.set("gameAnswer/"+rid, response.data.answers);
+                console.log("got answer bitch: ", response.data.answers);
+                globalCache.set("gameAnswer/" + rid, response.data.answers);
                 return resolve(response.data.answers);
             })
             .catch((error) => {
@@ -70,6 +71,7 @@ export const internalCheckAllEnded = async (rid) => {
     if (gameData == false) return null;
     // eslint-disable-next-line no-unused-vars
     for (const [key, value] of Object.entries(gameData.players)) {
+        console.log(value);
         if (value.online == true && (value.ready < 2 || value.ended == false)) return false;
     }
     return true;
@@ -92,7 +94,7 @@ export const internalUpdateOnlineStatus = async (status, uid, rid) => {
             online: status,
         });
     }
-    globalCache.set("gameDataPublic/"+rid, gameData);
+    globalCache.set("gameDataPublic/" + rid, gameData);
     return true;
 };
 
@@ -114,7 +116,7 @@ export const internalUpdateReadyStatus = async (status, uid, rid) => {
         });
     }
 
-    globalCache.set("gameDataPublic/"+rid, gameData);
+    globalCache.set("gameDataPublic/" + rid, gameData);
     return true;
 };
 
@@ -126,13 +128,16 @@ export const internalStartGame = async (uid, rid) => {
     if (result == true) {
         const gameData = await internalGetGameInfo(rid);
         if (gameData == null) return null;
-        globalCache.set("gameDataPublic/"+rid, gameData);
+        globalCache.set("gameDataPublic/" + rid, gameData);
     }
     return result;
 };
 
 export const internalCalcPoint = async (uid, rid, status, corStreak, incorStreak, timeTaken, pStats) => {
     const data = await internalGetRoomInfo(rid);
+    if (data.diff === "Easy") data.diff = 0.2;
+    if (data.diff === "Normal") data.diff = 0.5;
+    if (data.diff === "Hard") data.diff = 0.9;
     let scP = 1;
     let scE = 1;
     if (pStats.hp == 1) {
@@ -140,15 +145,15 @@ export const internalCalcPoint = async (uid, rid, status, corStreak, incorStreak
         scE = 1.5;
     }
     if (status) {
-        return ~~((450 + 30*pStats.atk) * (0.5 + (Math.min(10, corStreak)/10)*0.3 + (1-(timeTaken/(1000*data.tframe)))*0.7) * (0.7 + data.diff) * scP * (1+pStats.buff));
+        return ~~((450 + 30 * pStats.atk) * (0.5 + (Math.min(10, corStreak) / 10) * 0.3 + (1 - (timeTaken / (1000 * data.tframe))) * 0.7) * (0.7 + data.diff) * scP * (1 + pStats.buff));
     } else {
-        return ~~(-150 * (0.5 + (Math.min(5, incorStreak)/5)*0.5) * (0.8 + data.diff) * (1+(20-pStats.def)/20) * scE);
+        return ~~(-150 * (0.5 + (Math.min(5, incorStreak) / 5) * 0.5) * (0.8 + data.diff) * (1 + (20 - pStats.def) / 20) * scE);
     }
 };
 
 export const internalCalcGem = async (rid, points) => {
     const data = await internalGetRoomInfo(rid);
-    return ~~(Math.max(points/100, 0) * (0.8+data.diff*2));
+    return ~~(Math.max(points / 100, 0) * (0.8 + data.diff * 2));
 };
 
 export const internalAfterGame = async (uid, rid, points, gems, corCnt) => {
@@ -182,28 +187,28 @@ export const postGameContext = async (req, res) => {
     const rid = req.body.rid;
     const data = req.body.data;
     if (uid == null || uid == "" || rid == null || rid == "" || data == null) {
-        return res.json({"msg": "err Data not vaild", "data": null});
+        return res.json({ "msg": "err Data not vaild", "data": null });
     }
     globalCache.set(`gameContext/${rid}/${uid}`, data, 28800);
-    return res.json({"msg": "ok", "data": null});
+    return res.json({ "msg": "ok", "data": null });
 };
 
 export const getGameContext = async (req, res) => {
     const uid = req.body.uid;
     const rid = req.body.rid;
     if (uid == null || uid == "" || rid == null || rid == "") {
-        return res.json({"msg": "err Data not vaild", "data": null});
+        return res.json({ "msg": "err Data not vaild", "data": null });
     }
-    return res.json({"msg": "ok", "data": globalCache.get(`gameContext/${rid}/${uid}`)});
+    return res.json({ "msg": "ok", "data": globalCache.get(`gameContext/${rid}/${uid}`) });
 };
 
 export const getGameStatus = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == null || uid == "" || data == null) {
-        return res.json({"msg": "err Data not vaild", "data": null});
+        return res.json({ "msg": "err Data not vaild", "data": null });
     }
     const result = await internalGetGameInfo(data);
-    if (result == false) return res.json({"msg": "err Data not vaild", "data": null});
-    return res.json({"msg": "ok", "data": result});
+    if (result == false) return res.json({ "msg": "err Data not vaild", "data": null });
+    return res.json({ "msg": "ok", "data": result });
 };
