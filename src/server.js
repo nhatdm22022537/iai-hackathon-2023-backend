@@ -5,7 +5,6 @@ const cors = require("cors");
 const NodeCache = require("node-cache");
 
 import morgan from "morgan";
-import {errorHandling} from "./errorHandling";
 require("dotenv").config();
 
 const app = express();
@@ -14,9 +13,26 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({extended: false}));
+
 app.all("/err", (req, res, next) => {
     const err = new Error("Error");
     next(err);
+});
+app.use((_req, _res, next)=>{
+    const error = new Error("err Error occured! But luckily we catch it hehe");
+    error.status = 404;
+    next(error);
+});
+
+app.use((error, _req, res, _next)=>{
+    if (error.status) {
+        return res.status(error.status).json({
+            msg: error.message,
+            data: null,
+        });
+    }
+
+    res.status(500).json({msg: "err Error occured! But luckily we catch it hehe", data: null});
 });
 
 initWebRoutes(app);
@@ -29,4 +45,4 @@ app.listen(port, () => {
 
 export const globalCache = new NodeCache({stdTTL: process.env.CACHE_TTL || 259200, checkperiod: process.env.CACHE_CHECK || 302400});
 
-app.use(errorHandling);
+

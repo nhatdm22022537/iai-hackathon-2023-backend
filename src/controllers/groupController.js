@@ -71,7 +71,7 @@ export const getGroupInfoList = async (req, res) => {
         const memberData = await Database.ref(`groups/${groupId}/members`).get();
         const memberCount = Object.keys(memberData.val()).length;
         Object.assign(groupInfo, {memberCount: memberCount});
-        groupInfoList.push(groupInfo)
+        groupInfoList.push(groupInfo);
     }
     return res.json({msg: "ok", groupInfoList: groupInfoList});
 };

@@ -1,14 +1,14 @@
-import { globalCache } from "../server";
-import { internalGetRoomInfo, internalUpdateCacheListRoom } from "./roomController";
-import { internalUpdateUserBalance } from "./possessionController";
-import { Database, ServerValue } from "../config/firebaseInit";
+import {globalCache} from "../server";
+import {internalGetRoomInfo, internalUpdateCacheListRoom} from "./roomController";
+import {internalUpdateUserBalance} from "./possessionController";
+import {Database, ServerValue} from "../config/firebaseInit";
 const axios = require("axios");
 require("dotenv").config();
 
 export const internalGetGameInfo = async (rid) => {
     let gameData = globalCache.get("gameDataPublic/" + rid);
     if (gameData) return gameData;
-    gameData = { details: {}, players: {} };
+    gameData = {details: {}, players: {}};
     const arr = await internalUpdateCacheListRoom(rid);
     if (arr == null) return false;
     arr.forEach((e) => {
@@ -37,7 +37,7 @@ export const internalGetCorrectAnswer = async (rid) => {
         };
         axios.request(config)
             .then((response) => {
-                console.log("got answer bitch: ", response.data.answers);
+                console.log("got answer: ", response.data.answers);
                 globalCache.set("gameAnswer/" + rid, response.data.answers);
                 return resolve(response.data.answers);
             })
@@ -71,8 +71,7 @@ export const internalCheckAllEnded = async (rid) => {
     if (gameData == false) return null;
     // eslint-disable-next-line no-unused-vars
     for (const [key, value] of Object.entries(gameData.players)) {
-        console.log(value);
-        if (value.online == true && (value.ready < 2 || value.ended == false)) return false;
+        if (value == null || (value.online == true && (value.ready < 2 || value.ended == false))) return false;
     }
     return true;
 };
@@ -153,6 +152,9 @@ export const internalCalcPoint = async (uid, rid, status, corStreak, incorStreak
 
 export const internalCalcGem = async (rid, points) => {
     const data = await internalGetRoomInfo(rid);
+    if (data.diff === "Easy") data.diff = 0.2;
+    if (data.diff === "Normal") data.diff = 0.5;
+    if (data.diff === "Hard") data.diff = 0.9;
     return ~~(Math.max(points / 100, 0) * (0.8 + data.diff * 2));
 };
 
@@ -187,28 +189,28 @@ export const postGameContext = async (req, res) => {
     const rid = req.body.rid;
     const data = req.body.data;
     if (uid == null || uid == "" || rid == null || rid == "" || data == null) {
-        return res.json({ "msg": "err Data not vaild", "data": null });
+        return res.json({"msg": "err Data not vaild", "data": null});
     }
     globalCache.set(`gameContext/${rid}/${uid}`, data, 28800);
-    return res.json({ "msg": "ok", "data": null });
+    return res.json({"msg": "ok", "data": null});
 };
 
 export const getGameContext = async (req, res) => {
     const uid = req.body.uid;
     const rid = req.body.rid;
     if (uid == null || uid == "" || rid == null || rid == "") {
-        return res.json({ "msg": "err Data not vaild", "data": null });
+        return res.json({"msg": "err Data not vaild", "data": null});
     }
-    return res.json({ "msg": "ok", "data": globalCache.get(`gameContext/${rid}/${uid}`) });
+    return res.json({"msg": "ok", "data": globalCache.get(`gameContext/${rid}/${uid}`)});
 };
 
 export const getGameStatus = async (req, res) => {
     const uid = req.body.uid;
     const data = req.body.data;
     if (uid == null || uid == "" || data == null) {
-        return res.json({ "msg": "err Data not vaild", "data": null });
+        return res.json({"msg": "err Data not vaild", "data": null});
     }
     const result = await internalGetGameInfo(data);
-    if (result == false) return res.json({ "msg": "err Data not vaild", "data": null });
-    return res.json({ "msg": "ok", "data": result });
+    if (result == false) return res.json({"msg": "err Data not vaild", "data": null});
+    return res.json({"msg": "ok", "data": result});
 };
