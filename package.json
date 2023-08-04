@@ -2,7 +2,7 @@
   "name": "iai-hackathon-2023",
   "version": "1.0.0",
   "description": "20m is in our hands",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "babel src -d dist --copy-files",
